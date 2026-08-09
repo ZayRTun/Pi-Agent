@@ -15,6 +15,7 @@ agent/pi-hermes-memory/sessions.db
 agent/pi-hermes-memory/sessions.db-shm
 agent/pi-hermes-memory/sessions.db-wal
 agent/.pi-hermes-locks.sqlite*
+agent/pi-hermes-memory/.consolidation-locks/
 
 # --- Upstream clone inside prime-tui (re-cloneable) ---
 agent/prime-tui/prime-agent-src/
