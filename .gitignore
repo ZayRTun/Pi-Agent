@@ -3,12 +3,13 @@ agent/auth.json
 
 # --- Runtime data / caches / logs (regenerable) ---
 agent/npm/
+agent/missions/
 agent/sessions/
 agent/mcp-cache.json
 agent/mcp-npx-cache.json
 agent/pi-crash.log
 agent/run-history.jsonl
-.pi-subagents/artifacts/
+.pi-subagents/
 
 # --- Memory stores (personal data; intentionally not backed up) ---
 agent/pi-hermes-memory/
