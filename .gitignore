@@ -10,17 +10,13 @@ agent/pi-crash.log
 agent/run-history.jsonl
 .pi-subagents/artifacts/
 
-# --- Memory sqlite db (regenerated; the .md memory files ARE committed) ---
-agent/pi-hermes-memory/sessions.db
-agent/pi-hermes-memory/sessions.db-shm
-agent/pi-hermes-memory/sessions.db-wal
+# --- Memory stores (personal data; intentionally not backed up) ---
+agent/pi-hermes-memory/
+agent/projects-memory/
 agent/.pi-hermes-locks.sqlite*
-agent/pi-hermes-memory/.consolidation-locks/
 
 # --- Upstream clone inside prime-tui (re-cloneable) ---
 agent/prime-tui/prime-agent-src/
 
 # --- OS noise ---
 .DS_Store
-
-agent/pi-hermes-memory/.MEMORY.md.recovery-*

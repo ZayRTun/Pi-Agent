@@ -1,9 +1,0 @@
-goldenland-realestate-v2 uses GitHub issues as the issue tracker; a 'frontier query' is defined in docs/agents/issue-tracker.md to find the next unblocked ticket (open map children minus open blockers/assignees, first in map order). The `gh` CLI is used for issue operations. <!-- created=2026-08-06, last=2026-08-06 -->
-§
-Issue lifecycle for goldenland-realestate-v2: after implementing a ticket, the resolve step is mandatory — not just commit. Per docs/agents/issue-tracker.md: (1) `gh issue close <n> --comment "<implementation summary with commit SHA, test results, ledger path>"`, (2) append a context pointer bullet to the map issue #1's "Implementation Decisions" section (there is no separate Decisions-so-far section). User corrected me on 2026-08-06 for skipping the close on #3. <!-- created=2026-08-06, last=2026-08-06 -->
-§
-goldenland-realestate-v2 AI Assist tests install deterministic fakes at provider boundaries (`propertyProviderFake()` bundles `imageObservationFake()`; use `complexProviderFake()` similarly). The `ComplexContentAgent`/`PropertyContentAgent` interfaces accept an `array $observations = []` and the generators send observation summaries as text instead of raw images; the Complex no-invent constraint is adversarial: logo may be referenced but never used as required evidence. <!-- created=2026-08-07, last=2026-08-07 -->
-§
-goldenland-realestate-v2 uses GitHub issues; 'frontier query' in docs/agents/issue-tracker.md finds next unblocked ticket. `gh` CLI for issue ops. <!-- created=2026-08-07, last=2026-08-07 -->
-§
-goldenland-realestate-v2: after implementing, resolve step mandatory — `gh issue close <n> --comment`, append pointer to #1's 'Implementation Decisions'. No separate Decisions-so-far section. <!-- created=2026-08-07, last=2026-08-07 -->

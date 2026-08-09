@@ -1,1 +1,0 @@
-In this pi setup, builtin subagents (including worker/scout/planner) have `inheritSkills: false` by default, so delegated tasks must include the relevant skill contract, artifact paths, acceptance criteria, and validation commands explicitly. <!-- created=2026-08-06, last=2026-08-06 -->

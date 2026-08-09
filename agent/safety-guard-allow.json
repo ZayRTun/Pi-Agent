@@ -81,6 +81,15 @@
       "label": "possible secret file access",
       "category": "secrets",
       "createdAt": "2026-08-09T14:46:57.516Z"
+    },
+    {
+      "key": "bash:/Users/zayar/.pi:cd /Users/zayar/.pi && git rm -r --cached --quiet agent/pi-hermes-memory agent/projects-memory && git add .gitignore && git status --short | awk '{print $1}' | sort | uniq -c",
+      "kind": "bash",
+      "value": "cd /Users/zayar/.pi && git rm -r --cached --quiet agent/pi-hermes-memory agent/projects-memory && git add .gitignore && git status --short | awk '{print $1}' | sort | uniq -c",
+      "cwd": "/Users/zayar/.pi",
+      "label": "recursive rm",
+      "category": "filesystem",
+      "createdAt": "2026-08-09T14:57:21.786Z"
     }
   ]
 }
