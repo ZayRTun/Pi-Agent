@@ -41,6 +41,7 @@ apply "$PATCHES/autocomplete.js"              "$TUI_DIST/autocomplete.js"
 apply "$PATCHES/settings-list.js"             "$TUI_DIST/components/settings-list.js"
 apply "$PATCHES/pi-coding-agent-theme.js"     "$PI_PKG/dist/modes/interactive/theme/theme.js"
 apply "$PATCHES/pi-coding-agent-interactive-mode.js" "$PI_PKG/dist/modes/interactive/interactive-mode.js"
+apply "$PATCHES/tui-alt-screen.js"            "$TUI_DIST/tui-alt-screen.js"
 
 echo
 echo "Prime TUI patches applied. Restart pi to see the new look."
