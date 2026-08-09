@@ -172,6 +172,7 @@ export function createInteractiveTui(options) {
         return new TuiAltScreen(terminal, options.showHardwareCursor, options.logDirectory, {
             openUrl: openBrowser,
             onRightClickPaste: options.onRightClickPaste,
+            onCopy: options.onCopy,
         });
     }
     return new TuiMainScreen(terminal, options.showHardwareCursor, options.logDirectory);
@@ -340,6 +341,9 @@ export class InteractiveMode {
             showHardwareCursor: this.settingsManager.getShowHardwareCursor(),
             logDirectory: getAgentDir(),
             onRightClickPaste: this.onRightClickPaste,
+            onCopy: (text) => {
+                void this.copyFullscreenSelection(text);
+            },
         });
         this.ui = createInteractiveTuiReference(() => this.renderer);
         this.ui.setClearOnShrink(this.settingsManager.getClearOnShrink());
@@ -2779,6 +2783,15 @@ export class InteractiveMode {
      * If multiple status messages are emitted back-to-back (without anything else being added to the chat),
      * we update the previous status line instead of appending new ones to avoid log spam.
      */
+    async copyFullscreenSelection(text) {
+        try {
+            await copyToClipboard(text);
+            this.showStatus("Copied selection to clipboard");
+        }
+        catch (error) {
+            this.showError(`Failed to copy selection: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
     showStatus(message) {
         const children = this.chatContainer.children;
         const last = children.length > 0 ? children[children.length - 1] : undefined;

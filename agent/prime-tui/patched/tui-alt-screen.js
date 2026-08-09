@@ -74,6 +74,7 @@ export class TuiAltScreen extends TuiBase {
         this.mouseEnabled = options.mouse ?? true;
         this.openUrl = options.openUrl;
         this.onRightClickPaste = options.onRightClickPaste;
+        this.onCopy = options.onCopy;
         this.addInputListener((data) => this.handleViewportInput(data));
     }
     get viewportTop() {
@@ -756,6 +757,13 @@ export class TuiAltScreen extends TuiBase {
         const text = lines.join("\n");
         if (text.length === 0)
             return;
+        // Prime parity: when the app wires onCopy, delegate (the app performs the clipboard
+        // write and shows a dim status line in the chat). Fall back to OSC 52 + flash when
+        // no handler is wired (e.g. standalone TUI usage).
+        if (this.onCopy) {
+            this.onCopy(text);
+            return;
+        }
         this.terminal.write(`\x1b]52;c;${Buffer.from(text).toString("base64")}\x07`);
         this.flash("Copied!");
     }
