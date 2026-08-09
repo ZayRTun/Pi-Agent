@@ -381,8 +381,11 @@ export class InteractiveMode {
         if (!sourceInfo) {
             return undefined;
         }
-        const scopePrefix = sourceInfo.scope === "user" ? "u" : sourceInfo.scope === "project" ? "p" : "t";
+        const scopePrefix = sourceInfo.scope === "user" ? "user" : sourceInfo.scope === "project" ? "project" : "temporary";
         const source = sourceInfo.source.trim();
+        if (source === "builtin") {
+            return "builtin";
+        }
         if (source === "auto" || source === "local" || source === "cli") {
             return scopePrefix;
         }
@@ -396,12 +399,9 @@ export class InteractiveMode {
         }
         return scopePrefix;
     }
-    prefixAutocompleteDescription(description, sourceInfo) {
-        // ponytail: dropped the `[u]`/`[p]` source-scope tag (e.g. `[u] Diagnosis loop...`)
-        // that Prime's popover design inlined into the description. The tag was noise for
-        // locally-sourced skills; if provenance display is ever wanted back, restore the
-        // `[${sourceTag}] ` prefix from getAutocompleteSourceTag.
-        return description ?? "";
+    getAutocompleteSourceLabel(sourceInfo) {
+        const sourceTag = this.getAutocompleteSourceTag(sourceInfo);
+        return sourceTag ? `#${sourceTag}` : undefined;
     }
     getBuiltInCommandConflictDiagnostics(extensionRunner) {
         const builtinNames = new Set(BUILTIN_SLASH_COMMANDS.map((command) => command.name));
@@ -459,7 +459,8 @@ export class InteractiveMode {
         // Convert prompt templates to SlashCommand format for autocomplete
         const templateCommands = this.session.promptTemplates.map((cmd) => ({
             name: cmd.name,
-            description: this.prefixAutocompleteDescription(cmd.description, cmd.sourceInfo),
+            description: cmd.description,
+            sourceTag: this.getAutocompleteSourceLabel(cmd.sourceInfo),
             ...(cmd.argumentHint && { argumentHint: cmd.argumentHint }),
         }));
         // Convert extension commands to SlashCommand format
@@ -469,7 +470,8 @@ export class InteractiveMode {
             .filter((cmd) => !builtinCommandNames.has(cmd.name))
             .map((cmd) => ({
             name: cmd.invocationName,
-            description: this.prefixAutocompleteDescription(cmd.description, cmd.sourceInfo),
+            description: cmd.description,
+            sourceTag: this.getAutocompleteSourceLabel(cmd.sourceInfo),
             getArgumentCompletions: cmd.getArgumentCompletions,
         }));
         // Build skill commands from session.skills (if enabled)
@@ -481,7 +483,8 @@ export class InteractiveMode {
                 this.skillCommands.set(commandName, skill.filePath);
                 skillCommandList.push({
                     name: commandName,
-                    description: this.prefixAutocompleteDescription(skill.description, skill.sourceInfo),
+                    description: skill.description,
+                    sourceTag: this.getAutocompleteSourceLabel(skill.sourceInfo),
                 });
             }
         }

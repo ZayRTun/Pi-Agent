@@ -210,11 +210,13 @@ export class CombinedAutocompleteProvider {
                     const name = "name" in cmd ? cmd.name : cmd.value;
                     const hint = "argumentHint" in cmd && cmd.argumentHint ? cmd.argumentHint : undefined;
                     const desc = cmd.description ?? "";
+                    const sourceTag = "sourceTag" in cmd && cmd.sourceTag ? cmd.sourceTag : undefined;
                     return {
                         name,
                         label: name,
                         description: desc || undefined,
                         ...(hint && { argumentHint: hint }),
+                        ...(sourceTag && { sourceTag }),
                     };
                 });
                 const filtered = fuzzyFilter(commandItems, prefix, (item) => item.name).map((item) => ({
@@ -222,6 +224,7 @@ export class CombinedAutocompleteProvider {
                     label: item.label,
                     ...(item.description && { description: item.description }),
                     ...(item.argumentHint && { argumentHint: item.argumentHint }),
+                    ...(item.sourceTag && { sourceTag: item.sourceTag }),
                 }));
                 if (filtered.length === 0)
                     return null;
