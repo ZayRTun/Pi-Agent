@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "missionId": "634d8001-4a06-48ac-af88-3211b18b709e",
+  "projectRoot": "/Users/zayar/code/goldenland-realestate-v2",
+  "recordPath": "/Users/zayar/code/goldenland-realestate-v2/.pi-subagents/missions/634d8001-4a06-48ac-af88-3211b18b709e.json",
+  "title": "You are the Spec reviewer. Review the uncommitted working-tree diff in /Users/zayar/code/goldenla...",
+  "status": "completed",
+  "updatedAt": "2026-08-08T09:57:45.769Z",
+  "lastRunId": "33f03e75"
+}

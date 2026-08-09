@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "missionId": "bf0b2431-fb96-42fb-a58f-dfe14d3d6458",
+  "projectRoot": "/Users/zayar/.pi",
+  "recordPath": "/Users/zayar/.pi/.pi-subagents/missions/bf0b2431-fb96-42fb-a58f-dfe14d3d6458.json",
+  "title": "Fix the two blockers found in the independent review of the delegation gate. Work only in /Users/...",
+  "status": "completed",
+  "updatedAt": "2026-08-06T07:21:48.797Z",
+  "lastRunId": "9997553a-021b-487d-9f3e-fae09a79079d"
+}

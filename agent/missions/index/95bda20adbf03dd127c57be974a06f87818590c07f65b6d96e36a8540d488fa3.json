@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "missionId": "06830a2c-1d5e-416d-8399-978e6c5b673c",
+  "projectRoot": "/Users/zayar/code/goldenland-realestate-v2",
+  "recordPath": "/Users/zayar/code/goldenland-realestate-v2/.pi-subagents/missions/06830a2c-1d5e-416d-8399-978e6c5b673c.json",
+  "title": "Inspect /Users/zayar/code/goldenland-realestate-v2 for the current user/admin seeding and authent...",
+  "status": "failed",
+  "updatedAt": "2026-08-06T09:07:57.080Z",
+  "lastRunId": "8b4b4dba"
+}

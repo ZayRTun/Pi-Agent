@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "missionId": "9eed8a1d-170b-4a66-922f-8e56ef98abbf",
+  "projectRoot": "/Users/zayar/code/goldenland-realestate-v2",
+  "recordPath": "/Users/zayar/code/goldenland-realestate-v2/.pi-subagents/missions/9eed8a1d-170b-4a66-922f-8e56ef98abbf.json",
+  "title": "Review commit c82b9c8 against repository standards and Laravel best practices. Inspect git diff H...",
+  "status": "failed",
+  "updatedAt": "2026-08-06T09:51:24.679Z",
+  "lastRunId": "e18c00f8"
+}

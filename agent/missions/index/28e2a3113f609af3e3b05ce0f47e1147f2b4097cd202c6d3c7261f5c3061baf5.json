@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "missionId": "9f488e3d-f117-46ee-8956-f465f4b180c5",
+  "projectRoot": "/Users/zayar/code/goldenland-realestate-v2",
+  "recordPath": "/Users/zayar/code/goldenland-realestate-v2/.pi-subagents/missions/9f488e3d-f117-46ee-8956-f465f4b180c5.json",
+  "title": "Objective: research official OpenRouter API docs relevant to ticket #5. Focus on models endpoint ...",
+  "status": "waiting",
+  "updatedAt": "2026-08-06T07:57:19.576Z",
+  "lastRunId": "4f80913a"
+}

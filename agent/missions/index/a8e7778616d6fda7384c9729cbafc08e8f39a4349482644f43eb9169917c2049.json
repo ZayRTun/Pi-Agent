@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "missionId": "24c48a54-0df8-4341-9c19-3beb68caf379",
+  "projectRoot": "/Users/zayar/code/goldenland-realestate-v2",
+  "recordPath": "/Users/zayar/code/goldenland-realestate-v2/.pi-subagents/missions/24c48a54-0df8-4341-9c19-3beb68caf379.json",
+  "title": "Create the review ledger for ticket #5 at docs/agents/reviews/5.md in /Users/zayar/code/goldenlan...",
+  "status": "completed",
+  "updatedAt": "2026-08-06T08:39:01.702Z",
+  "lastRunId": "863c80b5"
+}

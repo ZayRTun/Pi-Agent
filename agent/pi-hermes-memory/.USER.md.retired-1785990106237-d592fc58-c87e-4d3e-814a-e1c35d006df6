@@ -1,0 +1,1 @@
+Prefers compact, information-dense TUI status bars. For the custom-footer extension, wants this right-column ordering: context bar → used/total fraction → I/O tokens. Likes Font Awesome arrows (/) over nerd font icons for input/output token display. Minimal spacing between segments. <!-- created=2026-07-29, last=2026-07-29 -->

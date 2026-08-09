@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "ed080d5d-d982-4201-8fb9-d74cac5ff5a5",
+  "title": "Read-only validation of the hard delegation gate just implemented in the global Pi setup. Inspect...",
+  "goal": "Read-only validation of the hard delegation gate just implemented in the global Pi setup. Inspect exactly these files: /Users/zayar/.pi/agent/extensions/delegation-gate.ts, /Users/zayar/.pi/agent/settings.json, and /Users/zayar/.pi/agent/AGENTS.md. Also inspect the relevant Pi extension API docs and pi-subagents tool behavior if needed. Verify: primary-only detection is correct; gate resets per user input; direct repo tools are blocked until a real successful subagent launch; list/status are not mistaken for launches; blocking vs non-blocking child completion is handled correctly; child processes are exempt; explicit /graphify and narrow map/query checks work; no accidental blocking of memory/session/skill tools; settings/extension loading is correct. Do not edit files. Return findings with file/line citations, validation commands you run, residual risks, and whether it is ready.",
+  "status": "completed",
+  "createdAt": "2026-08-06T07:16:33.543Z",
+  "updatedAt": "2026-08-06T07:19:37.179Z",
+  "runs": [
+    {
+      "runId": "1d9542a0-9830-403d-87e1-c3c07b232670",
+      "mode": "single",
+      "asyncDir": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/1d9542a0-9830-403d-87e1-c3c07b232670",
+      "status": "complete",
+      "startedAt": "2026-08-06T07:16:33.549Z",
+      "completedAt": "2026-08-06T07:19:37.179Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "status",
+      "path": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/1d9542a0-9830-403d-87e1-c3c07b232670/status.json"
+    },
+    {
+      "kind": "other",
+      "path": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/1d9542a0-9830-403d-87e1-c3c07b232670/events.jsonl",
+      "description": "Lifecycle events"
+    },
+    {
+      "kind": "output",
+      "path": "/Users/zayar/.pi/.pi-subagents/artifacts/1d9542a0-9830-403d-87e1-c3c07b232670_reviewer_output.md"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/Users/zayar/.pi",
+  "ownerSessionId": "/Users/zayar/.pi/agent/sessions/--Users-zayar-.pi--/2026-08-06T03-06-55-811Z_019fd509-c7c3-7160-995a-f46b461b88a8.jsonl",
+  "summary": "reviewer:\n## Review\n\n- **Correct:** Primary-only detection is aligned with `pi-subagents`: the gate exits when `PI_SUBAGENT_CHILD=1` at `delegation-gate.ts:75-78`, and child launches set that variable at `pi-args.ts:345`. Harness validation registered zero gate handlers in child mode.\n- **Correct:** State resets on every non-empty user input at `delegation-gate.ts:82-91`, including clearing delegation and pending async state.\n- **Correct:** Management calls are not treated as launches. `isRealSubagentLaunch()` rejects any input containing `action` at `delegation-gate.ts:31-42`. `subagent { action: \"list\" }` and `{ action: \"status\" }` did not release the gate.\n- **Correct:** Blocking versus non-blocking waits works for explicit async launches. `delegation-gate.ts:97-106` keeps the gate closed after `async:true` and `nonBlocking:true`, then releases it after a successful blocking `subagent_wait`. The Pi API supports blocking tool-call handlers and block results (`types.d.ts:684-698`, `885-888`).\n- **Correct:** Child processes are exempt, and repository tools are limited to `read`, `grep`, `find`, `ls`, `bash`, `edit`, and `write` at `delegation-gate.ts:3-11`. Memory, session, and skill tools are not blocked.\n- **Correct:** Explicit `/graphify` and `/skill:graphify` inputs bypass the repository gate via `delegation-gate.ts:13-14` and `82-91`. The narrow positive existence-check form also works.\n- **Correct:** Settings are valid and load the gate at `/Users/zayar/.pi/agent/settings.json:12-15`; `pi list` showed `npm:pi-subagents`, and an offline no-session Pi invocation loaded successfully and returned `OK`.\n\n- **Blocker:** Direct launches with omitted `async` are incorrectly treated as blocking at `delegation-gate.ts:45-50` and `97-100`. Installed `pi-subagents` resolves async-by-default to true unless explicitly disabled (`src/extension/config.ts:43-45`; `src/extension/index.ts:328-330`; executor behavior at `subagent-executor.ts:4878-4880` and `5200-5201`). Harness r"
+}

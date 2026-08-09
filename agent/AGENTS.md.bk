@@ -1,0 +1,32 @@
+## Workflow Orchestration
+
+### Primary ownership
+Keep the primary session as the orchestrator and user interface. It owns user communication, decisions, scope, sequencing, synthesis, integration, and completion. Treat each invoked skill's `SKILL.md` as the source of truth; this file defines context hygiene and delegation only.
+
+### Delegate bounded work
+Delegate context-heavy or independently verifiable work when doing so keeps the primary context healthy:
+
+- repository reconnaissance and fact-finding → `scout`
+- primary-source research → `researcher`
+- context and plan drafting → `context-builder` or `planner`
+- approved implementation → one `worker`
+- independent validation → `reviewer` or the skill's required reviewers
+
+For every child, provide one objective, exact inputs and file scope, a named output (report, artifact path, or patch), and a checkable completion criterion. Request concise findings with file/line citations. Run independent read-only lanes in parallel. Use repository artifacts (`CONTEXT.md`, ADRs, specs, tickets, and plans) as handoffs instead of copying transcripts or logs into the primary context.
+
+### Ownership and safety
+- Keep one writer per cwd or worktree. A worker owns its edits while it runs; the primary stays out of that worktree until the worker reports. Use one fresh worker per approved ticket.
+- Read-only children report evidence; the primary integrates it and makes the decision. Workers implement only the approved direction and escalate unresolved scope, domain, architecture, or safety choices.
+- Builtin children do not inherit ambient skills by default. Include the relevant skill contract, artifact paths, acceptance criteria, and validation commands in a child task.
+
+### Matt skill routing
+- For a new idea or design in a repository, start with `/grill-with-docs`; it runs `/grilling` with `/domain-modeling`. The primary asks the user the numbered frontier questions and waits for answers. Delegate environmental fact-finding, not the interview or the user's decisions. Preserve inline glossary and ADR updates.
+- For approved multi-session work, use `/to-spec` → `/to-tickets` → one fresh implementation worker per ticket. For an approved existing spec or ticket, use `/implement` directly; keep small work in the primary when delegation would add more context than it saves.
+- During `/implement`, have the worker use `/tdd` at pre-agreed seams where possible, run focused tests and typechecks regularly, and run the full suite once at the end. The primary then runs `/code-review`, addresses or records its findings, and commits the reviewed change to the current branch. A generic reviewer does not replace the skill's required two-axis review.
+
+### Completion
+A child handoff is complete only when it names changed files or artifacts, validation commands and results, commit/worktree state, unresolved risks or decisions, and the next step. The primary task is complete only after the relevant skill gates, user decisions, integration, tests, review, and commit state are verified.
+
+
+
+

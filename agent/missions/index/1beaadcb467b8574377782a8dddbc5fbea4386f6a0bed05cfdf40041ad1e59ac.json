@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "missionId": "5077f389-b37b-4583-bb31-bd77bc22dc90",
+  "projectRoot": "/Users/zayar/.pi",
+  "recordPath": "/Users/zayar/.pi/.pi-subagents/missions/5077f389-b37b-4583-bb31-bd77bc22dc90.json",
+  "title": "Read-only policy review. Inspect /Users/zayar/.pi/agent/AGENTS.md and the pi-subagents runtime/ag...",
+  "status": "completed",
+  "updatedAt": "2026-08-06T07:10:50.389Z",
+  "lastRunId": "c298405e-5faa-4a2c-bb22-109517b9845b"
+}

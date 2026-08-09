@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "missionId": "01175868-2505-454e-af4d-b4ea2c76011d",
+  "projectRoot": "/Users/zayar/.pi",
+  "recordPath": "/Users/zayar/.pi/.pi-subagents/missions/01175868-2505-454e-af4d-b4ea2c76011d.json",
+  "title": "Read-only investigation. Inspect /Users/zayar/.pi/agent/AGENTS.md and the Matt Pocock skill files...",
+  "status": "completed",
+  "updatedAt": "2026-08-06T03:12:28.289Z",
+  "lastRunId": "6d8c87b6-30ec-47db-ac39-2ef3f0f71620"
+}

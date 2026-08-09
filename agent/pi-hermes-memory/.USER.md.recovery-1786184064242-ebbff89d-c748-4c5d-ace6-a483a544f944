@@ -1,0 +1,13 @@
+Prefers compact, information-dense TUI status bars. For the custom-footer extension, wants this right-column ordering: context bar → used/total fraction → I/O tokens. Likes Font Awesome arrows (/) over nerd font icons for input/output token display. Minimal spacing between segments. <!-- created=2026-07-29, last=2026-07-29 -->
+§
+Prefers the primary agent to delegate context-heavy, independently verifiable work to focused subagents so the main session stays healthy; primary should retain user-facing decisions, orchestration, synthesis, and final verification. <!-- created=2026-08-06, last=2026-08-06 -->
+§
+Prefers global AGENTS.md guidance to stay generic and reusable rather than naming or encoding vendor-specific skill flows such as Matt Pocock's skills; skill-specific procedures should remain in their own SKILL.md files. <!-- created=2026-08-06, last=2026-08-06 -->
+§
+Prefers compact, information-dense TUI status bars; right-column ordering: context bar → used/total fraction → I/O tokens; Font Awesome arrows over nerd font icons. <!-- created=2026-08-07, last=2026-08-07 -->
+§
+Prefers primary agent to delegate context-heavy verifiable work to subagents; retain user-facing decisions, orchestration, synthesis. <!-- created=2026-08-07, last=2026-08-07 -->
+§
+Prefers global AGENTS.md guidance generic/reusable; skill-specific procedures in their own SKILL.md. <!-- created=2026-08-07, last=2026-08-07 -->
+§
+When implementing tickets in the goldenland-realestate-v2 repo, follow the documented issue-tracker workflow: after commit, write a review ledger to docs/agents/reviews/<issue-number>.md, close the GitHub issue with a summary comment (commit SHA, test results, ledger path), and append a context pointer to parent issue #1's 'Implementation Decisions' section. The two-axis code review via parallel sub-agents is a mandatory pre-commit step. <!-- created=2026-08-07, last=2026-08-07 -->

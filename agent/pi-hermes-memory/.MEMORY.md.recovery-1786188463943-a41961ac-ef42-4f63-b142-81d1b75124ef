@@ -1,0 +1,7 @@
+User collaboration & design-session style:
+• Design stress-testing: /grill-with-docs and /grilling skills; prefers a 'design tree' with rounds of questions on the current frontier.
+• On context loss user invokes /wait-what — re-pitch in ASD-STE100 Simplified Technical English + ubiquitous language from CONTEXT.md.
+• Goldenland: 'where do we decide which model?' → 'Global model chain' multi-select in AI Settings → 'OpenRouter generation policy' (reorderable, from live catalog filtered to image-input + structured-output models).
+• Primary agent delegates context-heavy, independently verifiable work to focused subagents; primary keeps user-facing decisions, orchestration, synthesis, final verification. <!-- created=2026-08-08, last=2026-08-08 -->
+§
+User prefers global AGENTS.md guidance to stay generic and reusable rather than naming or encoding vendor-specific skill flows such as Matt Pocock's skills; skill-specific procedures should remain in their own SKILL.md files. <!-- created=2026-08-08, last=2026-08-08 -->

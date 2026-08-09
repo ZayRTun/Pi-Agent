@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "missionId": "c2fb8523-aa65-487f-977c-a3c2307de8a3",
+  "projectRoot": "/Users/zayar/code/goldenland-realestate-v2",
+  "recordPath": "/Users/zayar/code/goldenland-realestate-v2/.pi-subagents/missions/c2fb8523-aa65-487f-977c-a3c2307de8a3.json",
+  "title": "Apply the independent review fixes to the current uncommitted ticket #5 implementation in /Users/...",
+  "status": "completed",
+  "updatedAt": "2026-08-06T08:21:32.031Z",
+  "lastRunId": "bb38fe11"
+}

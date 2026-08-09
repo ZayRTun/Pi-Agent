@@ -1,0 +1,15 @@
+[correction] When adding a new feature to existing code, do not remove or drop existing functionality (e.g., removed the "85k/200k" context total when adding I/O tokens to the custom-footer). User will notice and call it out. — Failed: Dropped the total context fraction (85k/200k) when refactoring the right column to add I/O token display. User asked "why did you remove the total context" — had to put it back. <!-- created=2026-07-29, last=2026-07-29 -->
+§
+[failure] I/O token counters in custom-footer.ts were static during a turn because they relied on `ctx.sessionManager.getBranch()` entries. Solved by adding a `message_update` event listener that estimates output tokens from accumulated text length (chars/4) during streaming, falling back to completed entries after `message_end` clears the estimate. — Failed: ctx.getContextUsage() returns only {tokens, contextWindow, percent} — no input/output split <!-- created=2026-07-29, last=2026-07-29 -->
+§
+[correction] getBranch() missed compaction/branch_summary usage entries. Fixed by switching to getEntries() which also captures those. — Failed: getBranch() only includes current branch entries, missing compaction summaries <!-- created=2026-07-29, last=2026-07-29 -->
+§
+[tool-quirk] In this repo, GitHub issues track work but are not auto-closed when implementation lands; the frontier query can surface a ticket whose work is already done. The agent should verify issue state against committed code and close stale tickets before proceeding. — Failed: Agent found ticket #2 still OPEN despite its implementation being committed and reviewed; had to close it manually before starting next ticket. <!-- created=2026-08-06, last=2026-08-06 -->
+§
+[correction] When adding a trait to an Eloquent model, both the `use` import at the top and the `use TraitName;` inside the class body must be added. The assistant initially added the trait to the class body but forgot the import, causing 'Call to undefined method' errors. Pint removes unused imports, so edits that only add the class-level `use` can fail if the import isn't also added simultaneously. — Failed: Forgot to add the import statement when using a new trait in a model; caused BadMethodCallException. <!-- created=2026-08-06, last=2026-08-06 -->
+§
+[tool-quirk] When adding a trait import to a Laravel model, must also add the class `use` statement; otherwise methods are undefined at runtime (BadMethodCallException). Also, pint may remove the class `use` if only the import was added, so verify both after formatting. <!-- created=2026-08-06, last=2026-08-06 -->
+§
+[tool-quirk] Spatie's HasTranslations reads a missing locale as `''` (empty string), not null. Assertions on translated fields with no value must check raw attributes or use getTranslations() and verify no locale keys exist, not assert null on the accessor. <!-- created=2026-08-06, last=2026-08-06 -->
+§
+[tool-quirk] When the `edit-failure` message includes 'Could not find edits[0] in <path>', the oldText must match exactly including whitespace and newlines; always verify the exact current file content before replacing. <!-- created=2026-08-06, last=2026-08-06 -->

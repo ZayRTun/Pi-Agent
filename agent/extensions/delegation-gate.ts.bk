@@ -1,0 +1,135 @@
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+
+const REPOSITORY_TOOLS = new Set([
+	"read",
+	"grep",
+	"find",
+	"ls",
+	"bash",
+	"edit",
+	"write",
+]);
+
+const GRAPHIFY_SKILL = /^\s*\/(?:graphify|skill:graphify)(?:\s|$)/;
+const GRAPHIFY_DIRECT_COMMAND = /^graphify\s+(?:query|path|explain)\b(?:\s+.*)?$/;
+
+interface GateState {
+	enforce: boolean;
+	delegated: boolean;
+	pendingAsync: number;
+	explicitGraphify: boolean;
+}
+
+function initialState(): GateState {
+	return { enforce: false, delegated: false, pendingAsync: 0, explicitGraphify: false };
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null;
+}
+
+function isRealSubagentLaunch(input: unknown): boolean {
+	if (!isObject(input)) return false;
+
+	// The management actions (list/status/...) are deliberately not launches.
+	if (typeof input.action === "string") return false;
+
+	const agent = typeof input.agent === "string" && input.agent.trim() !== "";
+	const workflow = typeof input.workflowScript === "string" && input.workflowScript.trim() !== "";
+
+	// `task` is optional in the pi-subagents schema, so an explicit agent
+	// without a task still represents a real child launch.
+	return agent || workflow;
+}
+
+function isAsyncLaunch(input: unknown): boolean {
+	if (!isObject(input)) return false;
+
+	// pi-subagents defaults direct launches to async=true. Only an explicit
+	// async:false launch is foreground and may release the gate immediately.
+	return input.async !== false;
+}
+
+function isBlockingWait(input: unknown): boolean {
+	return !isObject(input) || input.nonBlocking !== true;
+}
+
+function isGraphifyMapPreflight(command: string): boolean {
+	const normalized = command.trim().replace(/\s+/g, " ");
+	const path = "graphify-out/graph\\.json";
+
+	// This must remain a pure, single existence check. Anchoring the complete
+	// command rejects chaining, substitutions, redirection, and appended work.
+	return new RegExp(
+		`^(?:test\\s+-[ef]\\s+${path}|\\[\\[\\s+-[ef]\\s+${path}\\s+\\]\\]|\\[\\s+-[ef]\\s+${path}\\s+\\])$`,
+	).test(normalized);
+}
+
+function isAllowedGraphifyToolCall(toolName: string, input: unknown): boolean {
+	if (toolName !== "bash" || !isObject(input)) return false;
+
+	const command = typeof input.command === "string" ? input.command.trim() : "";
+	if (isGraphifyMapPreflight(command)) return true;
+
+	// Permit only one direct graphify traversal command. Compound shell
+	// commands stay behind the delegation gate.
+	return !/[;&|`$()<>\n]/.test(command) && GRAPHIFY_DIRECT_COMMAND.test(command);
+}
+
+export default function delegationGate(pi: ExtensionAPI): void {
+	// Child agents must retain their assigned repository tools. The gate only
+	// governs the primary process that owns delegation decisions.
+	if (process.env.PI_SUBAGENT_CHILD === "1") return;
+
+	let state = initialState();
+
+	pi.on("input", (event) => {
+		const text = event.text.trim();
+		const explicitGraphify = GRAPHIFY_SKILL.test(text);
+
+		state = {
+			enforce: text !== "" && !explicitGraphify,
+			delegated: false,
+			pendingAsync: 0,
+			explicitGraphify,
+		};
+	});
+
+	pi.on("tool_result", (event) => {
+		if (event.isError) return;
+
+		if (event.toolName === "subagent" && isRealSubagentLaunch(event.input)) {
+			if (isAsyncLaunch(event.input)) state.pendingAsync += 1;
+			else state.delegated = true;
+			return;
+		}
+
+		if (event.toolName === "subagent_wait" && state.pendingAsync > 0 && isBlockingWait(event.input)) {
+			if (isObject(event.input) && event.input.all === true) {
+				state.pendingAsync = 0;
+			} else {
+				state.pendingAsync = Math.max(0, state.pendingAsync - 1);
+			}
+
+			if (state.pendingAsync === 0) state.delegated = true;
+		}
+	});
+
+	pi.on("tool_call", async (event) => {
+		if (!state.enforce || state.delegated) return;
+
+		// Agent discovery and a real child/workflow launch are always allowed.
+		if (event.toolName === "subagent") return;
+		if (!REPOSITORY_TOOLS.has(event.toolName)) return;
+		if (state.explicitGraphify || isAllowedGraphifyToolCall(event.toolName, event.input)) return;
+
+		return {
+			block: true,
+			reason:
+				`Delegation gate: launch a matching subagent before using ${event.toolName}. ` +
+				"Use scout for reconnaissance, planner/context-builder for planning, " +
+				"worker for implementation, or reviewer for validation. The graphify map/query " +
+				"preflight is the only repository exception.",
+		};
+	});
+}

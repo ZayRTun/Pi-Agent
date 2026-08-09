@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "d80520af-94c6-466b-9087-311779ad4819",
+  "title": "Implement the approved hardening for primary-agent delegation in the global Pi setup at /Users/za...",
+  "goal": "Implement the approved hardening for primary-agent delegation in the global Pi setup at /Users/zayar/.pi. The observed problem is that AGENTS.md instructions are advisory, so the primary still performs repository work inline. Create a global primary-only runtime gate and tighten the generic AGENTS.md wording.\n\nExact scope:\n1. Inspect the Pi extension documentation and current /Users/zayar/.pi/agent/settings.json and AGENTS.md.\n2. Add a global extension under /Users/zayar/.pi/agent/extensions/ that uses Pi's tool_call/input lifecycle to enforce this policy for the primary process only (skip child processes when PI_SUBAGENT_CHILD=1): before repository tools (`read`, `grep`, `find`, `ls`, `bash`, `edit`, `write`) are allowed in a user task, an actual subagent execution must have succeeded. Allow the management/list action used to discover agents, and count only a real child/workflow launch—not `action: list` or status calls. Reset the gate for each new user input. Block direct repository tools with a clear reason that tells the primary to launch the matching subagent. Preserve the explicit `/graphify` flow and permit the narrow graphify map/query preflight needed by the generic policy; do not block memory/session/skill tools. Avoid blocking child agents.\n3. Update /Users/zayar/.pi/agent/settings.json only as needed to ensure the global extension loads. Do not modify pi-subagents package files.\n4. Rewrite /Users/zayar/.pi/agent/AGENTS.md's delegation section with a concise top-level gate: classify before repository work, delegate substantive inspection/planning/implementation/review, use exactly one worker for implementation, and keep direct primary work limited to dialogue/decisions/synthesis/mechanical integration. Keep the graphify-aware rule generic and compatible with the runtime gate.\n\nCompletion criteria:\n- A primary direct repository tool call before a successful child launch is blocked visibly.\n- A primary can call the subagent tool's list action, then launch a child, then use repository tools after the child result.\n- Child processes can use their assigned repository tools without the gate blocking them.\n- Explicit /graphify commands remain usable.\n- The existing one-writer and child-task-contract rules remain intact.\n\nValidation commands:\n- Read the final extension, AGENTS.md, and settings.json.\n- Run an available TypeScript/typecheck or syntax validation for the extension; if the environment lacks one, run the closest import/load check and report it.\n- Verify the settings JSON parses.\n- Do not run destructive commands, modify node_modules, or commit.\n\nEscalate only if Pi's extension API cannot distinguish the primary from child processes or cannot block tool calls; otherwise implement the smallest safe gate. Return: changed files, validation commands/results, behavior test evidence, residual risks, and next step.",
+  "status": "completed",
+  "createdAt": "2026-08-06T07:12:29.013Z",
+  "updatedAt": "2026-08-06T07:16:25.844Z",
+  "runs": [
+    {
+      "runId": "895ecbe6-54b6-42d2-bf2d-41da9b881072",
+      "mode": "single",
+      "asyncDir": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/895ecbe6-54b6-42d2-bf2d-41da9b881072",
+      "status": "complete",
+      "startedAt": "2026-08-06T07:12:29.023Z",
+      "completedAt": "2026-08-06T07:16:25.844Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "status",
+      "path": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/895ecbe6-54b6-42d2-bf2d-41da9b881072/status.json"
+    },
+    {
+      "kind": "other",
+      "path": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/895ecbe6-54b6-42d2-bf2d-41da9b881072/events.jsonl",
+      "description": "Lifecycle events"
+    },
+    {
+      "kind": "output",
+      "path": "/Users/zayar/.pi/.pi-subagents/artifacts/895ecbe6-54b6-42d2-bf2d-41da9b881072_worker_output.md"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/Users/zayar/.pi",
+  "ownerSessionId": "/Users/zayar/.pi/agent/sessions/--Users-zayar-.pi--/2026-08-06T03-06-55-811Z_019fd509-c7c3-7160-995a-f46b461b88a8.jsonl",
+  "summary": "worker:\nImplemented a hard primary-agent delegation gate.\n\nChanged files:\n- `/Users/zayar/.pi/agent/extensions/delegation-gate.ts`\n  - Blocks primary repository tools until a real subagent launch succeeds.\n  - Allows `subagent` management/list calls.\n  - Requires blocking wait completion for async launches.\n  - Skips child processes with `PI_SUBAGENT_CHILD=1`.\n  - Preserves explicit `/graphify` commands and narrow map/query preflight.\n- `/Users/zayar/.pi/agent/settings.json`\n  - Loads the new global extension.\n- `/Users/zayar/.pi/agent/AGENTS.md`\n  - Adds the runtime gate contract and keeps delegation/graphify/one-writer rules intact.\n\nValidation:\n- TypeScript strict check passed via `tsc -p /tmp/delegation-gate-tsconfig.json`.\n- Jiti extension load passed.\n- Settings JSON parsing passed.\n- Primary behavior harness passed:\n  - Direct repository tool blocked before delegation.\n  - Agent list allowed.\n  - Repository tools allowed after successful child result.\n  - Graphify preflight and explicit query allowed.\n- Async behavior harness passed:\n  - Repository tools remain blocked until blocking `subagent_wait`.\n  - Non-blocking wait does not satisfy the gate.\n- Child-process harness passed; child tools are not blocked.\n- No package files modified and no files staged.\n\nOpen risks:\n- The gate intentionally blocks direct repository work in the primary until delegation. If the subagent extension is unavailable or fails to load, the primary will need the runtime configuration repaired before continuing.\n- The graphify exceptions are intentionally narrow and only recognize common map checks/query commands."
+}

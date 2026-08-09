@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "0f6121f6-41a9-4793-9d21-60a0631e6e64",
+  "title": "Read-only diagnosis of delegation behavior. Inspect /Users/zayar/.pi/agent/AGENTS.md as it exists...",
+  "goal": "Read-only diagnosis of delegation behavior. Inspect /Users/zayar/.pi/agent/AGENTS.md as it exists now and the pi-subagents builtin agent profiles under /Users/zayar/.pi/agent/npm/node_modules/pi-subagents/agents. The observed issue is that the primary agent still implements most work itself instead of delegating. Identify exact wording that permits this, then propose the smallest stronger rewrite with explicit delegation defaults and exceptions. Preserve primary ownership of user decisions and one-writer safety. Return concise findings with file/line citations and a proposed replacement section. Do not edit files.",
+  "status": "completed",
+  "createdAt": "2026-08-06T04:23:38.374Z",
+  "updatedAt": "2026-08-06T04:24:24.247Z",
+  "runs": [
+    {
+      "runId": "51e2408a-ff54-4d1a-9911-58bda8547489",
+      "mode": "single",
+      "asyncDir": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/51e2408a-ff54-4d1a-9911-58bda8547489",
+      "status": "complete",
+      "startedAt": "2026-08-06T04:23:38.392Z",
+      "completedAt": "2026-08-06T04:24:24.247Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "status",
+      "path": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/51e2408a-ff54-4d1a-9911-58bda8547489/status.json"
+    },
+    {
+      "kind": "other",
+      "path": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/51e2408a-ff54-4d1a-9911-58bda8547489/events.jsonl",
+      "description": "Lifecycle events"
+    },
+    {
+      "kind": "output",
+      "path": "/Users/zayar/.pi/.pi-subagents/artifacts/51e2408a-ff54-4d1a-9911-58bda8547489_reviewer_output.md"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/Users/zayar/.pi",
+  "ownerSessionId": "/Users/zayar/.pi/agent/sessions/--Users-zayar-.pi--/2026-08-06T03-06-55-811Z_019fd509-c7c3-7160-995a-f46b461b88a8.jsonl",
+  "summary": "reviewer:\n## Review\n\n### Findings\n\n- **High — optional delegation permits primary self-execution:** `/Users/zayar/.pi/agent/AGENTS.md:7` says, “**Delegate context-heavy or independently verifiable work when doing so keeps the primary context healthy**.” The conditional “when” and the narrow scope allow the primary to implement most tasks itself whenever it judges delegation unnecessary.\n- **High — implementation delegation is not mandatory:** `/Users/zayar/.pi/agent/AGENTS.md:12` describes “**approved implementation → one `worker`**,” but does not require the primary to delegate implementation or define direct execution as an exception.\n- **Medium — worker rules are conditional:** `/Users/zayar/.pi/agent/AGENTS.md:18-19` only constrain work **if a worker is used** (“A worker owns its edits”; “Workers implement only the approved direction”). They do not establish that a worker should normally be used.\n- **High — builtin oracle explicitly negates the desired default:** `/Users/zayar/.pi/agent/npm/node_modules/pi-subagents/agents/oracle.md:33-37` says, “**do not assume a `worker` implementation handoff is the default outcome**.” This directly reinforces primary self-implementation.\n- **Medium — child profiles do not create a delegation trigger:** `worker.md:15-19` describes execution of an “assigned task or approved direction,” while `planner.md:15-17` only says the planner must not make code changes. These govern children after selection; neither tells the primary to select a child by default. `context-builder.md:14` refers to a “next agent,” but does not make the handoff mandatory.\n\n### Correct\n\n- Primary ownership is appropriately preserved in `/Users/zayar/.pi/agent/AGENTS.md:4`: user communication, decisions, scope, sequencing, synthesis, integration, and completion remain with the primary.\n- One-writer safety is explicit in `/Users/zayar/.pi/agent/AGENTS.md:18`: one writer per cwd/worktree, worker ownership of edits, and primary exclusion while the worker runs.\n-"
+}

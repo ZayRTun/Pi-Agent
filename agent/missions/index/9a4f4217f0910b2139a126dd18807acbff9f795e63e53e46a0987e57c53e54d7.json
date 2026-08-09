@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "missionId": "c0ee17fa-57dc-424f-b6c9-eeb6f70d3ebe",
+  "projectRoot": "/Users/zayar/code/goldenland-realestate-v2",
+  "recordPath": "/Users/zayar/code/goldenland-realestate-v2/.pi-subagents/missions/c0ee17fa-57dc-424f-b6c9-eeb6f70d3ebe.json",
+  "title": "Review the uncommitted working-tree changes in /Users/zayar/code/goldenland-realestate-v2 along t...",
+  "status": "completed",
+  "updatedAt": "2026-08-06T05:28:28.027Z",
+  "lastRunId": "6481da9b"
+}

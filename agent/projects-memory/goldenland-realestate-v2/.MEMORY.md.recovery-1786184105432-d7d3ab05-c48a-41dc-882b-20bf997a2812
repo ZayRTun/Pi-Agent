@@ -1,0 +1,1 @@
+goldenland-realestate-v2 uses GitHub issues as the issue tracker; a 'frontier query' is defined in docs/agents/issue-tracker.md to find the next unblocked ticket (open map children minus open blockers/assignees, first in map order). The `gh` CLI is used for issue operations. <!-- created=2026-08-06, last=2026-08-06 -->

@@ -1,0 +1,21 @@
+In this pi setup, builtin subagents (including worker/scout/planner) have `inheritSkills: false` by default, so delegated tasks must include the relevant skill contract, artifact paths, acceptance criteria, and validation commands explicitly. <!-- created=2026-08-06, last=2026-08-06 -->
+§
+In the goldenland-realestate-v2 repo, the code-review skill reviews uncommitted work against a fixed point (HEAD for uncommitted changes) and the originating issue as spec source. Review findings are recorded in docs/agents/reviews/<issue-number>.md. The `.pi-subagents/` directory is pi-generated noise and must be gitignored. <!-- created=2026-08-06, last=2026-08-06 -->
+§
+When using the implement skill, after committing work the agent must follow the repo's issue-tracker convention: close the originating ticket with a comment and append a context pointer (e.g., to the map's 'Implementation Decisions' section) before marking done. Skipping this step is a miss the user will call out. <!-- created=2026-08-06, last=2026-08-06 -->
+§
+In goldenland-realestate-v2, the bilingual Content Suggestion model: English lane uses `status`/`accepted_at`; Burmese lane uses `my_accepted_at`/`my_error` columns and model helpers `hasBurmeseTranslation()`/`isBurmeseAccepted()`. Complex titles remain English-only (Burmese translation echoes English title); Property adds Burmese title + sub-description. Use `ContentSuggestionStatus` enum for status. <!-- created=2026-08-07, last=2026-08-07 -->
+§
+In goldenland-realestate-v2 tests, the `aiAssistAdminUser()` helper registers a `Gate::before` callback that denies all other users; calling it twice in the same test registers two callbacks causing AuthorizationException. Call it only once per test. <!-- created=2026-08-07, last=2026-08-07 -->
+§
+In goldenland-realestate-v2, `title_searchable_en` is only written when English title is accepted; Burmese-only acceptance does not change it. Complex title stays original unless English accepted. <!-- created=2026-08-07, last=2026-08-07 -->
+§
+User prefers a clean working tree before committing: always run full test suite, then commit with a clear message, then close the ticket via `gh issue close` with a summary comment, append context pointer to parent issue, and commit the review ledger. <!-- created=2026-08-07, last=2026-08-07 -->
+§
+Network to GitHub API can flap with 'connection reset by peer' and timeout errors. When this happens, retry with backoff and resume operations; the user will prompt a retry if needed. These are transient and not indicative of permanent failures. <!-- created=2026-08-07, last=2026-08-07 -->
+§
+In goldenland-realestate-v2, ticket #8 introduced the bilingual suggestion lifecycle: ContentSuggestion gains `my_accepted_at` and `my_error` columns for the Burmese lane; model helpers `hasBurmeseTranslation()` and `isBurmeseAccepted()`; translation contract is `ContentTranslationAgent::translate(array $english, Property|Complex $target): array` implemented by `OpenRouterContentTranslationAgent`. The refactor moved synthesis budget estimation to explicit `imageCount`; user relies on this. <!-- created=2026-08-07, last=2026-08-07 -->
+§
+In goldenland-realestate-v2, ticket #8 introduced the bilingual suggestion lifecycle: ContentSuggestion gains `my_accepted_at` and `my_error` columns for the Burmese lane; model helpers `hasBurmeseTranslation()` and `isBurmeseAccepted()`; translation contract is `ContentTranslationAgent::translate(array $english, Property|Complex $target): array` implemented by `OpenRouterContentTranslationAgent`. English lane keeps `status`/`accepted_at`. Complex translation echoes the English-only title; Property adds Burmese title + sub-description. Budget estimation in the OpenAI generator must use explicit `imageCount` (not `count($content) - 1`). <!-- created=2026-08-07, last=2026-08-07 -->
+§
+In goldenland-realestate-v2, ContentSuggestionValidator is a shared base class for PropertySuggestionValidator and ComplexSuggestionValidator; both enforce the same output contract (fixed field set, plain-text title/meta with entity-encoded markup rejection, 60/160/3000 limits, restricted safe-HTML descriptions). <!-- created=2026-08-07, last=2026-08-07 -->

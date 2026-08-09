@@ -1,0 +1,9 @@
+In this pi setup, builtin subagents (including worker/scout/planner) have `inheritSkills: false` by default, so delegated tasks must include the relevant skill contract, artifact paths, acceptance criteria, and validation commands explicitly. <!-- created=2026-08-06, last=2026-08-06 -->
+§
+In the goldenland-realestate-v2 repo, the code-review skill reviews uncommitted work against a fixed point (HEAD for uncommitted changes) and the originating issue as spec source. Review findings are recorded in docs/agents/reviews/<issue-number>.md. The `.pi-subagents/` directory is pi-generated noise and must be gitignored. <!-- created=2026-08-06, last=2026-08-06 -->
+§
+When using the implement skill, after committing work the agent must follow the repo's issue-tracker convention: close the originating ticket with a comment and append a context pointer (e.g., to the map's 'Implementation Decisions' section) before marking done. Skipping this step is a miss the user will call out. <!-- created=2026-08-06, last=2026-08-06 -->
+§
+In pi-subagents, AGENTS.md delegation rules are advisory: the extension exposes a callable subagent tool but does not automatically delegate or police primary repository tools. Reliable mandatory delegation requires a primary-side runtime guard (for example a global extension intercepting tool_call). <!-- created=2026-08-06, last=2026-08-06 -->
+§
+In goldenland-realestate-v2, the bilingual Content Suggestion model: English lane uses `status`/`accepted_at`; Burmese lane uses `my_accepted_at`/`my_error` columns and model helpers `hasBurmeseTranslation()`/`isBurmeseAccepted()`. Complex titles remain English-only (Burmese translation echoes English title); Property adds Burmese title + sub-description. Use `ContentSuggestionStatus` enum for status. <!-- created=2026-08-07, last=2026-08-07 -->

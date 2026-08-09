@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "missionId": "c787aa5d-95c8-4233-ac00-55fb96a8dd73",
+  "projectRoot": "/Users/zayar/code/goldenland-realestate-v2",
+  "recordPath": "/Users/zayar/code/goldenland-realestate-v2/.pi-subagents/missions/c787aa5d-95c8-4233-ac00-55fb96a8dd73.json",
+  "title": "Review the intended commit scope for the current repository changes. The requested commit should ...",
+  "status": "completed",
+  "updatedAt": "2026-08-06T09:26:32.446Z",
+  "lastRunId": "78e78095"
+}

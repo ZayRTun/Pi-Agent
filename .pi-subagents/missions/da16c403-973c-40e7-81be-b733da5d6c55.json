@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "da16c403-973c-40e7-81be-b733da5d6c55",
+  "title": "Independently stress-test the current /Users/zayar/.pi/agent/AGENTS.md against the user goal: mak...",
+  "goal": "Independently stress-test the current /Users/zayar/.pi/agent/AGENTS.md against the user goal: make the primary agent delegate enough work to keep the main context healthy. Focus on agent behavior activation: conditional versus mandatory language, delegation triggers, task sizing, implementation ownership, and avoiding delegation of user-facing decisions. Recommend exact positive wording and a compact policy. Do not edit files.",
+  "status": "completed",
+  "createdAt": "2026-08-06T04:23:38.410Z",
+  "updatedAt": "2026-08-06T04:24:35.179Z",
+  "runs": [
+    {
+      "runId": "08205f8f-6acc-4936-ac02-68be90d729eb",
+      "mode": "single",
+      "asyncDir": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/08205f8f-6acc-4936-ac02-68be90d729eb",
+      "status": "complete",
+      "startedAt": "2026-08-06T04:23:38.414Z",
+      "completedAt": "2026-08-06T04:24:35.179Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "status",
+      "path": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/08205f8f-6acc-4936-ac02-68be90d729eb/status.json"
+    },
+    {
+      "kind": "other",
+      "path": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/08205f8f-6acc-4936-ac02-68be90d729eb/events.jsonl",
+      "description": "Lifecycle events"
+    },
+    {
+      "kind": "output",
+      "path": "/Users/zayar/.pi/.pi-subagents/artifacts/08205f8f-6acc-4936-ac02-68be90d729eb_oracle_output.md"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/Users/zayar/.pi",
+  "ownerSessionId": "/Users/zayar/.pi/agent/sessions/--Users-zayar-.pi--/2026-08-06T03-06-55-811Z_019fd509-c7c3-7160-995a-f46b461b88a8.jsonl",
+  "summary": "oracle:\n## Inherited decisions\n\n- The primary agent remains the user-facing orchestrator and owns communication, decisions, scope, sequencing, synthesis, integration, and completion (`AGENTS.md:3-4`).\n- Delegation is intended for bounded, context-heavy, independently verifiable work (`AGENTS.md:6-15`).\n- Approved implementation should have one worker, with one writer per worktree (`AGENTS.md:12, 18`).\n- Read-only children provide evidence; unresolved scope, architecture, domain, and safety issues return to the primary (`AGENTS.md:19`).\n- No files should be edited for this review.\n\n## Diagnosis\n\nThe policy has sound ownership and handoff principles, but its activation language is too discretionary for the stated goal of keeping the primary context healthy. A primary agent can comply literally while doing most reconnaissance, planning, implementation, and validation itself.\n\nThe largest gap is that the policy describes delegation mappings with arrows rather than mandatory triggers. It also does not explicitly prohibit delegating user-facing or product decisions, and it does not clearly make worker implementation ownership mandatory.\n\n## Drift / contradiction check\n\n- **Conditional delegation remains the default.** `AGENTS.md:7` says to delegate “when doing so keeps the primary context healthy,” but provides no observable threshold or required task categories. The primary can simply judge that its context is currently healthy.\n- **Role mappings are not behavioral requirements.** `AGENTS.md:9-13` maps work types to child roles, but does not say the primary *must* launch those roles when the corresponding work exists.\n- **Implementation ownership is underspecified.** `AGENTS.md:12` says “approved implementation → one `worker`,” but the arrow can be read as guidance. It does not explicitly require the primary to avoid implementing an approved change itself.\n- **Task sizing is only partially operationalized.** `AGENTS.md:15` requires one objective and exact inputs/file sco"
+}

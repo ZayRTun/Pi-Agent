@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "key": "bash:/Users/zayar/code/mat-skill-test:cd /Users/zayar/code/mat-skill-test && source .env 2>/dev/null; grep OPENROUTER_API_KEY .env",
+      "kind": "bash",
+      "value": "cd /Users/zayar/code/mat-skill-test && source .env 2>/dev/null; grep OPENROUTER_API_KEY .env",
+      "cwd": "/Users/zayar/code/mat-skill-test",
+      "label": "possible secret file access",
+      "category": "secrets",
+      "createdAt": "2026-07-27T09:20:52.204Z"
+    },
+    {
+      "key": "bash:/Users/zayar/.pi:rm -rf /tmp/test-pi-subagent",
+      "kind": "bash",
+      "value": "rm -rf /tmp/test-pi-subagent",
+      "cwd": "/Users/zayar/.pi",
+      "label": "recursive rm",
+      "category": "filesystem",
+      "createdAt": "2026-07-29T07:55:43.792Z"
+    },
+    {
+      "key": "bash:/Users/zayar/code/goldenland-realestate-v2:cd /Users/zayar/code/goldenland-realestate-v2 && grep -rn \"authorizeAccess\\|abort\" vendor/filament/filament/src/Pages/Page.php | head -5; grep -rn \"function mount\" vendor/filament/filament/src/Pages/Page.php vendor/filament/filament/src/Pages/BasePage.php | head -4; sed -n \"$(grep -n 'function mount' vendor/filament/filament/src/Pages/Page.php | head -1 | cut -d: -f1),+6p\" vendor/filament/filament/src/Pages/Page.php",
+      "kind": "bash",
+      "value": "cd /Users/zayar/code/goldenland-realestate-v2 && grep -rn \"authorizeAccess\\|abort\" vendor/filament/filament/src/Pages/Page.php | head -5; grep -rn \"function mount\" vendor/filament/filament/src/Pages/Page.php vendor/filament/filament/src/Pages/BasePage.php | head -4; sed -n \"$(grep -n 'function mount' vendor/filament/filament/src/Pages/Page.php | head -1 | cut -d: -f1),+6p\" vendor/filament/filament/src/Pages/Page.php",
+      "cwd": "/Users/zayar/code/goldenland-realestate-v2",
+      "label": "mount/swap change",
+      "category": "system",
+      "createdAt": "2026-08-06T05:17:47.763Z"
+    },
+    {
+      "key": "bash:/Users/zayar/code/goldenland-realestate-v2:rg -n -i \"Google Credentials|google_credentials|google credentials|credentials\" app resources config routes database tests | head -200",
+      "kind": "bash",
+      "value": "rg -n -i \"Google Credentials|google_credentials|google credentials|credentials\" app resources config routes database tests | head -200",
+      "cwd": "/Users/zayar/code/goldenland-realestate-v2",
+      "label": "possible secret file access",
+      "category": "secrets",
+      "createdAt": "2026-08-06T09:28:21.413Z"
+    },
+    {
+      "key": "bash:/Users/zayar/code/goldenland-realestate-v2:rg -n -i \"google_credentials|Google credential|service.account|service_account|GOOGLE_APPLICATION|google\" app config resources .env.example README.md docs tests | head -300",
+      "kind": "bash",
+      "value": "rg -n -i \"google_credentials|Google credential|service.account|service_account|GOOGLE_APPLICATION|google\" app config resources .env.example README.md docs tests | head -300",
+      "cwd": "/Users/zayar/code/goldenland-realestate-v2",
+      "label": "possible secret file access",
+      "category": "secrets",
+      "createdAt": "2026-08-06T09:28:45.362Z"
+    },
+    {
+      "key": "bash:/Users/zayar/code/goldenland-realestate-v2:git add app/Services/AiAssist/OpenRouter/OpenRouterContentGenerator.php tests/Feature/AiAssist/OpenRouterContentAgentTest.php && git commit --amend --no-edit && git status --short --branch",
+      "kind": "bash",
+      "value": "git add app/Services/AiAssist/OpenRouter/OpenRouterContentGenerator.php tests/Feature/AiAssist/OpenRouterContentAgentTest.php && git commit --amend --no-edit && git status --short --branch",
+      "cwd": "/Users/zayar/code/goldenland-realestate-v2",
+      "label": "git commit --amend",
+      "category": "git",
+      "createdAt": "2026-08-06T09:59:24.393Z"
+    },
+    {
+      "key": "bash:/Users/zayar/code/goldenland-realestate-v2:git restore -- app/Policies/PropertyPolicy.php database/factories/UserFactory.php && git status --short --branch && git diff --stat",
+      "kind": "bash",
+      "value": "git restore -- app/Policies/PropertyPolicy.php database/factories/UserFactory.php && git status --short --branch && git diff --stat",
+      "cwd": "/Users/zayar/code/goldenland-realestate-v2",
+      "label": "git restore",
+      "category": "git",
+      "createdAt": "2026-08-06T10:03:29.022Z"
+    },
+    {
+      "key": "bash:/Users/zayar/code/goldenland-realestate-v2:cd /Users/zayar/code/goldenland-realestate-v2 && ls database/migrations/ | grep -i \"ai\\|suggest\\|observ\" && echo \"---\" && grep -rn \"google_credentials\\|googleCredentials\" app/ --include=\"*.php\" | grep -v \"AiConfiguration.php\" | head -10 && echo \"--- Nearby model ---\" && find app/Models -name \"Nearby*\" && echo \"---\" && grep -rn \"nearby\" app/Filament/Resources/PropertyResource -l | head",
+      "kind": "bash",
+      "value": "cd /Users/zayar/code/goldenland-realestate-v2 && ls database/migrations/ | grep -i \"ai\\|suggest\\|observ\" && echo \"---\" && grep -rn \"google_credentials\\|googleCredentials\" app/ --include=\"*.php\" | grep -v \"AiConfiguration.php\" | head -10 && echo \"--- Nearby model ---\" && find app/Models -name \"Nearby*\" && echo \"---\" && grep -rn \"nearby\" app/Filament/Resources/PropertyResource -l | head",
+      "cwd": "/Users/zayar/code/goldenland-realestate-v2",
+      "label": "possible secret file access",
+      "category": "secrets",
+      "createdAt": "2026-08-07T02:39:02.226Z"
+    },
+    {
+      "key": "bash:/Users/zayar/.pi:cd /Users/zayar/.pi && git ls-files | grep -c 'auth.json' ; git ls-files | grep -iE 'prime-agent-src|sessions\\.db|/npm/' | head -3; echo \"---sample of what's tracked---\"; git ls-files | head -25; echo \"...\"; git ls-files | grep -E 'prime-tui/(patched|backup)/' | head -8",
+      "kind": "bash",
+      "value": "cd /Users/zayar/.pi && git ls-files | grep -c 'auth.json' ; git ls-files | grep -iE 'prime-agent-src|sessions\\.db|/npm/' | head -3; echo \"---sample of what's tracked---\"; git ls-files | head -25; echo \"...\"; git ls-files | grep -E 'prime-tui/(patched|backup)/' | head -8",
+      "cwd": "/Users/zayar/.pi",
+      "label": "possible secret file access",
+      "category": "secrets",
+      "createdAt": "2026-08-09T14:46:57.516Z"
+    }
+  ]
+}

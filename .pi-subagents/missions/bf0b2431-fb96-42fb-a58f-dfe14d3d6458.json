@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "bf0b2431-fb96-42fb-a58f-dfe14d3d6458",
+  "title": "Fix the two blockers found in the independent review of the delegation gate. Work only in /Users/...",
+  "goal": "Fix the two blockers found in the independent review of the delegation gate. Work only in /Users/zayar/.pi; do not modify node_modules or stage/commit files.\n\nFiles in scope: /Users/zayar/.pi/agent/extensions/delegation-gate.ts, and /Users/zayar/.pi/agent/AGENTS.md only if its wording needs to match.\n\nRequired fixes:\n1. pi-subagents defaults direct launches to async=true when `async` is omitted. Treat a real launch as asynchronous unless `input.async === false` is explicit. For omitted/true launches, keep repository tools blocked until a successful blocking `subagent_wait` result. Only an explicit `async:false` foreground launch may release the gate after its successful tool result. Re-run a harness proving `{agent:'scout'}` is blocked and `{agent:'scout', async:false}` is released after success.\n2. Tighten graphify exceptions. A map preflight must be a pure existence check for `graphify-out/graph.json`; reject shell operators, command chaining, redirection, substitutions, or appended commands such as `&& rm`. Graphify query/path/explain exceptions must accept only a single direct graphify command (or rely on explicit `/graphify` input), not substring matches inside compound shell commands. Re-run a harness proving `test -f graphify-out/graph.json && rm ...` is blocked while a pure check and a direct graphify query are allowed.\n3. If straightforward, replace the pending async boolean with a count so one blocking wait cannot release the gate while multiple async children remain. If this requires assumptions about runtime result semantics, preserve the safe blocked behavior and document the residual risk instead of guessing.\n\nValidation:\n- Run node syntax/import checks and the existing or equivalent event harness.\n- Parse settings if touched (prefer not to touch it).\n- Report exact changed files, commands/results, harness cases, and residual risks. No edits outside scope.",
+  "status": "completed",
+  "createdAt": "2026-08-06T07:20:03.359Z",
+  "updatedAt": "2026-08-06T07:21:48.797Z",
+  "runs": [
+    {
+      "runId": "9997553a-021b-487d-9f3e-fae09a79079d",
+      "mode": "single",
+      "asyncDir": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/9997553a-021b-487d-9f3e-fae09a79079d",
+      "status": "complete",
+      "startedAt": "2026-08-06T07:20:03.366Z",
+      "completedAt": "2026-08-06T07:21:48.797Z"
+    }
+  ],
+  "decisions": [],
+  "artifacts": [
+    {
+      "kind": "status",
+      "path": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/9997553a-021b-487d-9f3e-fae09a79079d/status.json"
+    },
+    {
+      "kind": "other",
+      "path": "/var/folders/zk/6zwx9y7n6g5_3qgr3_62x0xr0000gn/T/pi-subagents-uid-501/async-subagent-runs/9997553a-021b-487d-9f3e-fae09a79079d/events.jsonl",
+      "description": "Lifecycle events"
+    },
+    {
+      "kind": "output",
+      "path": "/Users/zayar/.pi/.pi-subagents/artifacts/9997553a-021b-487d-9f3e-fae09a79079d_worker_output.md"
+    }
+  ],
+  "receipts": [],
+  "cwd": "/Users/zayar/.pi",
+  "ownerSessionId": "/Users/zayar/.pi/agent/sessions/--Users-zayar-.pi--/2026-08-06T03-06-55-811Z_019fd509-c7c3-7160-995a-f46b461b88a8.jsonl",
+  "summary": "worker:\nImplemented the delegation-gate blocker fixes.\n\nChanged files:\n- `/Users/zayar/.pi/agent/extensions/delegation-gate.ts`\n- `/Users/zayar/.pi/agent/AGENTS.md` was already updated by the preceding implementation pass with the runtime gate wording.\n\nValidation:\n- `node --experimental-strip-types --check /Users/zayar/.pi/agent/extensions/delegation-gate.ts` — passed.\n- Event harness — passed:\n  - omitted `{ agent: \"scout\" }` remains blocked until `subagent_wait`\n  - explicit `{ agent: \"scout\", async: false }` releases after success\n  - one wait does not release multiple pending async children\n  - `all: true` releases after all children complete\n  - pure `test -f graphify-out/graph.json` is allowed\n  - chained checks such as `&& rm` are blocked\n  - direct `graphify query` is allowed\n  - compound graphify commands are blocked\n\nThe runtime gate now tracks pending asynchronous children by count and treats omitted `async` as asynchronous, matching `pi-subagents` defaults."
+}

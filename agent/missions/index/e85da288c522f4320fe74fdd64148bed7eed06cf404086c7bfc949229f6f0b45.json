@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "missionId": "8e3aed96-7219-4d03-80c1-cb78a32e0b55",
+  "projectRoot": "/Users/zayar/code/goldenland-realestate-v2",
+  "recordPath": "/Users/zayar/code/goldenland-realestate-v2/.pi-subagents/missions/8e3aed96-7219-4d03-80c1-cb78a32e0b55.json",
+  "title": "Review a SPECIFIC uncommitted diff for the Laravel app at /Users/zayar/code/goldenland-realestate...",
+  "status": "completed",
+  "updatedAt": "2026-08-08T11:40:43.281Z",
+  "lastRunId": "6428244d"
+}

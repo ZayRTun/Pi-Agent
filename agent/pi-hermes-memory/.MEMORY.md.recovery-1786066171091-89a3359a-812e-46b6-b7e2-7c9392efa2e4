@@ -1,0 +1,11 @@
+In this pi setup, builtin subagents (including worker/scout/planner) have `inheritSkills: false` by default, so delegated tasks must include the relevant skill contract, artifact paths, acceptance criteria, and validation commands explicitly. <!-- created=2026-08-06, last=2026-08-06 -->
+§
+In goldenland-realestate-v2, the issue-tracker workflow is a user preference — missing it gets called out: keep a clean working tree, run the full test suite, commit with a clear message, then close the ticket via `gh issue close` with a summary comment, append a context pointer (e.g., the map's 'Implementation Decisions' section) to the parent issue, and commit the review ledger. The code-review skill reviews uncommitted work against a fixed point (HEAD for uncommitted changes) with the originating issue as spec source; findings go in `docs/agents/reviews/<issue-number>.md`. `.pi-subagents/` is pi-generated noise and must be gitignored. <!-- created=2026-08-06, last=2026-08-07 -->
+§
+In goldenland-realestate-v2, the bilingual Content Suggestion model: English lane uses `status`/`accepted_at`; Burmese lane uses `my_accepted_at`/`my_error` columns and model helpers `hasBurmeseTranslation()`/`isBurmeseAccepted()`. Complex titles remain English-only (Burmese translation echoes English title); Property adds Burmese title + sub-description. Use `ContentSuggestionStatus` enum for status. <!-- created=2026-08-07, last=2026-08-07 -->
+§
+In goldenland-realestate-v2 tests, the `aiAssistAdminUser()` helper registers a `Gate::before` callback that denies all other users; calling it twice in the same test registers two callbacks causing AuthorizationException. Call it only once per test. <!-- created=2026-08-07, last=2026-08-07 -->
+§
+User prefers a clean working tree before committing: always run full test suite, then commit with a clear message, then close the ticket via `gh issue close` with a summary comment, append context pointer to parent issue, and commit the review ledger. <!-- created=2026-08-07, last=2026-08-07 -->
+§
+Network to GitHub API can flap with 'connection reset by peer' and timeout errors. When this happens, retry with backoff and resume operations; the user will prompt a retry if needed. These are transient and not indicative of permanent failures. <!-- created=2026-08-07, last=2026-08-07 -->

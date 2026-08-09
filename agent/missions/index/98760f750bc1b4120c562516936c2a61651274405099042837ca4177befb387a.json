@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "missionId": "0f6121f6-41a9-4793-9d21-60a0631e6e64",
+  "projectRoot": "/Users/zayar/.pi",
+  "recordPath": "/Users/zayar/.pi/.pi-subagents/missions/0f6121f6-41a9-4793-9d21-60a0631e6e64.json",
+  "title": "Read-only diagnosis of delegation behavior. Inspect /Users/zayar/.pi/agent/AGENTS.md as it exists...",
+  "status": "completed",
+  "updatedAt": "2026-08-06T04:24:24.247Z",
+  "lastRunId": "51e2408a-ff54-4d1a-9911-58bda8547489"
+}

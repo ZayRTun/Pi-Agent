@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "missionId": "91b97653-3164-43aa-bf17-09008068dc09",
+  "projectRoot": "/Users/zayar/.pi",
+  "recordPath": "/Users/zayar/.pi/.pi-subagents/missions/91b97653-3164-43aa-bf17-09008068dc09.json",
+  "title": "Read-only diagnosis. Investigate why the primary agent may still not delegate despite /Users/zaya...",
+  "status": "completed",
+  "updatedAt": "2026-08-06T07:10:08.588Z",
+  "lastRunId": "06632018-93e5-4787-8c14-71a7646a91c8"
+}
