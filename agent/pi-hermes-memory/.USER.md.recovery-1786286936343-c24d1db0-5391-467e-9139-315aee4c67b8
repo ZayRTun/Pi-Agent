@@ -19,5 +19,3 @@ Primary languages: JavaScript, Dart/Flutter, PHP. Editor: Neovim. Agent harnesse
 Communication style: concise, simple English (not a native English speaker). Prefer short explanations over long prose; code with file paths is fine, but keep the surrounding text simple. <!-- created=2026-08-09, last=2026-08-09 -->
 §
 Work style: plan-first. Likes to reach shared understanding with the agent before implementation, and to stress-test / grill ideas before building. (Matches the grilling/domain-modeling session style used on this project.) <!-- created=2026-08-09, last=2026-08-09 -->
-§
-Maintains a public GitHub repo for Pi configuration versioning (Pi-Agent.git) to enable rollback of config changes. <!-- created=2026-08-09, last=2026-08-09 -->

@@ -22,3 +22,5 @@ agent/prime-tui/prime-agent-src/
 
 # --- OS noise ---
 .DS_Store
+
+agent/pi-hermes-memory/.MEMORY.md.recovery-*
