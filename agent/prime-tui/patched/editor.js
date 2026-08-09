@@ -164,7 +164,9 @@ export function wordWrapLine(line, maxWidth, preSegmented) {
 }
 const SLASH_COMMAND_SELECT_LIST_LAYOUT = {
     minPrimaryColumnWidth: 12,
-    maxPrimaryColumnWidth: 32,
+    // Longest skill label is `skill:improve-codebase-architecture` (35) + PRIMARY_COLUMN_GAP (2).
+    // The column only expands as far as the widest visible label, so short labels stay compact.
+    maxPrimaryColumnWidth: 37,
     // Prime Agent TUI: two-column slash menu (name + [args]/source right), directional
     // scroll info, and the active command's description wrapped at the popover bottom.
     showItemMetadata: true,
@@ -484,7 +486,20 @@ export class Editor {
                 const lineWidth = visibleWidth(line);
                 const linePadding = " ".repeat(Math.max(0, textWidth - lineWidth));
                 const contentLine = `${popupLeftPadding}${line}${linePadding}${popupRightPadding}`;
-                result.push(popupBackgroundColor ? popupBackgroundColor(contentLine) : contentLine);
+                if (popupBackgroundColor) {
+                    // Re-apply the popup background after every embedded full reset, like
+                    // renderSurfaceLine does for the editor: truncateToWidth appends `\x1b[0m`
+                    // to truncated long labels, which would otherwise drop the panel
+                    // background for the rest of the row (black strip behind the source tag).
+                    const repainted = contentLine
+                        .split("\x1b[0m")
+                        .map((segment) => popupBackgroundColor(segment))
+                        .join("\x1b[0m");
+                    result.push(repainted);
+                }
+                else {
+                    result.push(contentLine);
+                }
             }
         }
         if (!useBackgroundSurface) {
