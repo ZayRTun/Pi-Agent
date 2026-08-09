@@ -397,11 +397,11 @@ export class InteractiveMode {
         return scopePrefix;
     }
     prefixAutocompleteDescription(description, sourceInfo) {
-        const sourceTag = this.getAutocompleteSourceTag(sourceInfo);
-        if (!sourceTag) {
-            return description;
-        }
-        return description ? `[${sourceTag}] ${description}` : `[${sourceTag}]`;
+        // ponytail: dropped the `[u]`/`[p]` source-scope tag (e.g. `[u] Diagnosis loop...`)
+        // that Prime's popover design inlined into the description. The tag was noise for
+        // locally-sourced skills; if provenance display is ever wanted back, restore the
+        // `[${sourceTag}] ` prefix from getAutocompleteSourceTag.
+        return description ?? "";
     }
     getBuiltInCommandConflictDiagnostics(extensionRunner) {
         const builtinNames = new Set(BUILTIN_SLASH_COMMANDS.map((command) => command.name));
