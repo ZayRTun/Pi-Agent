@@ -90,6 +90,15 @@
       "label": "recursive rm",
       "category": "filesystem",
       "createdAt": "2026-08-09T14:57:21.786Z"
+    },
+    {
+      "key": "bash:/Users/zayar/code/goldenland-realestate-v2:rg -n 'dump\\(|dd\\(|PropertyPage::properties|No hint path defined' app config tests resources || true",
+      "kind": "bash",
+      "value": "rg -n 'dump\\(|dd\\(|PropertyPage::properties|No hint path defined' app config tests resources || true",
+      "cwd": "/Users/zayar/code/goldenland-realestate-v2",
+      "label": "dd",
+      "category": "filesystem",
+      "createdAt": "2026-08-10T03:54:26.153Z"
     }
   ]
 }
