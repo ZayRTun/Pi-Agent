@@ -22,6 +22,7 @@ import {
   normalizeQuestion,
   validateBatchToolInput,
   validateToolInput,
+  type AnswerInput,
 } from "./interaction.js";
 import type {
   Answer,
@@ -108,46 +109,11 @@ const QuestionToolParams = Type.Object({
 });
 
 // ---------------------------------------------------------------------------
-// Batch tool schema
+// Batch tool schema — reuses QuestionToolParams to avoid duplication
 // ---------------------------------------------------------------------------
 
-const BatchQuestionSchema = Type.Object({
-  id: Type.String({ description: "Unique identifier for this question" }),
-  text: Type.String({ description: "The question text to display to the user" }),
-  label: Type.Optional(
-    Type.String({
-      description:
-        "Short navigation label (e.g. 'Scope', 'Priority'). Defaults to truncated text.",
-    }),
-  ),
-  mode: Type.Optional(
-    Type.Union(
-      [
-        Type.Literal("text"),
-        Type.Literal("single-select"),
-        Type.Literal("multi-select"),
-      ],
-      {
-        description:
-          "Input mode. Inferred from options when omitted.",
-      },
-    ),
-  ),
-  options: Type.Optional(
-    Type.Array(OptionSchema, {
-      description: "Available options.",
-    }),
-  ),
-  allowOther: Type.Optional(
-    Type.Boolean({
-      description:
-        "Allow custom 'Other' text input. Default: false for text mode, true for select modes.",
-    }),
-  ),
-});
-
 const BatchToolParams = Type.Object({
-  questions: Type.Array(BatchQuestionSchema, {
+  questions: Type.Array(QuestionToolParams, {
     description:
       "Two to twelve independent Questions with unique IDs and optional navigation labels.",
     minItems: 2,
@@ -162,6 +128,7 @@ const BatchToolParams = Type.Object({
 // Re-export shared types for tests and future integrations
 export type {
   Answer,
+  AnswerInput,
   BatchAnswer,
   BatchInput,
   BatchInteractionStatus,
@@ -308,12 +275,11 @@ export default function questionExtension(pi: ExtensionAPI) {
         }
 
         // Answered
-        const answer = buildAnsweredResult(
-          question,
-          result.selectedOption,
-          result.customText,
-          result.selectedValues,
-        );
+        const answer = buildAnsweredResult(question, {
+          selectedOption: result.selectedOption,
+          customText: result.customText,
+          selectedValues: result.selectedValues,
+        });
 
         const displayText = result.customText
           ? `User wrote: ${result.customText}`
@@ -503,12 +469,11 @@ export default function questionExtension(pi: ExtensionAPI) {
               status: "skipped" as const,
             };
           }
-          return buildAnsweredResult(
-            q,
-            draft.selectedOption as any,
-            draft.customText,
-            draft.selectedValues,
-          );
+          return buildAnsweredResult(q, {
+            selectedOption: draft.selectedOption as any,
+            customText: draft.customText,
+            selectedValues: draft.selectedValues,
+          });
         });
 
         const answeredCount = answers.filter((a) => a.status === "answered").length;

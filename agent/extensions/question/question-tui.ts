@@ -9,6 +9,7 @@
  */
 
 import type { NormalizedOption, NormalizedQuestion } from "./types.js";
+import { type OtherOption, currentOptions as buildOptions, createLineBuilder } from "./tui-utils.js";
 
 /** Result from the TUI interaction. */
 export interface TuiQuestionResult {
@@ -38,20 +39,15 @@ export function createQuestionComponent(
   let view: "options" | "editor" | "submit" = "options";
   let optionIndex = 0;
   let editorText = "";
+  let editorError = "";
   let cachedLines: string[] | undefined;
 
   function refresh() {
     cachedLines = undefined;
   }
 
-  function currentOptions(): (NormalizedOption & { isOther?: boolean })[] {
-    const opts: (NormalizedOption & { isOther?: boolean })[] = [
-      ...question.options,
-    ];
-    if (question.allowOther) {
-      opts.push({ label: "Type something…", value: "__other__", isOther: true });
-    }
-    return opts;
+  function currentOptions(): OtherOption[] {
+    return buildOptions(question);
   }
 
   function handleInput(data: string) {
@@ -72,10 +68,13 @@ export function createQuestionComponent(
         const trimmed = editorText.trim();
         if (trimmed) {
           done({ status: "answered", customText: trimmed });
+        } else {
+          editorError = "Please enter some text or press Esc to go back";
         }
         return;
       } else if (data.length === 1 && data >= " ") {
         editorText += data;
+        editorError = "";
       }
       refresh();
       return;
@@ -174,26 +173,7 @@ export function createQuestionComponent(
   function render(width: number): string[] {
     if (cachedLines) return cachedLines;
 
-    const lines: string[] = [];
-    const w = Math.max(1, width);
-
-    function addLine(text: string) {
-      lines.push(text);
-    }
-
-    function addWrapped(text: string) {
-      const words = text.split(" ");
-      let current = "";
-      for (const word of words) {
-        if (current && current.length + 1 + word.length > w) {
-          addLine(current);
-          current = word;
-        } else {
-          current = current ? current + " " + word : word;
-        }
-      }
-      if (current) addLine(current);
-    }
+    const { lines, addLine, addWrapped, w } = createLineBuilder(width);
 
     addLine(theme.fg("accent", "─".repeat(w)));
     addWrapped(" " + theme.fg("text", question.text));
@@ -216,6 +196,10 @@ export function createQuestionComponent(
       addLine("");
       addWrapped(" " + theme.fg("muted", "Your answer:"));
       addWrapped(" " + theme.fg("accent", "> " + editorText + "█"));
+      if (editorError) {
+        addLine("");
+        addWrapped(" " + theme.fg("warning", editorError));
+      }
       addLine("");
       addWrapped(" " + theme.fg("dim", "Enter to submit · Esc to go back"));
     } else if (view === "submit") {

@@ -19,6 +19,7 @@ import type {
   BatchQuestionInput,
   // Output types
   Answer,
+  AnswerInput,
   BatchAnswer,
   QuestionResult,
   BatchResult,
@@ -264,6 +265,7 @@ question/
 ├── interaction.ts        # Mode inference, normalization, validation, batch validation
 ├── question-tui.ts       # TUI component for single-question interactive mode
 ├── batch-tui.ts          # TUI component for batch-question interactive mode
+├── tui-utils.ts          # Shared TUI utilities (options builder, line wrapping)
 ├── rpc-adapter.ts        # RPC adapter using native dialogs
 ├── interaction.test.ts   # Tests at the interaction boundary
 ├── rpc-adapter.test.ts   # Tests for RPC adapter runtime parity

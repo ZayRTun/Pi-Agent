@@ -10,6 +10,7 @@
  */
 
 import type { NormalizedOption, NormalizedQuestion } from "./types.js";
+import { type OtherOption, currentOptions as buildOptions, createLineBuilder } from "./tui-utils.js";
 
 /** Draft answer stored while navigating between questions. */
 interface DraftAnswer {
@@ -56,13 +57,8 @@ export function createBatchComponent(
     return questions[activeIndex];
   }
 
-  function currentOptions(): (NormalizedOption & { isOther?: boolean })[] {
-    const q = activeQuestion();
-    const opts: (NormalizedOption & { isOther?: boolean })[] = [...q.options];
-    if (q.allowOther) {
-      opts.push({ label: "Type something\u2026", value: "__other__", isOther: true });
-    }
-    return opts;
+  function currentOptions(): OtherOption[] {
+    return buildOptions(activeQuestion());
   }
 
   function allAnsweredOrSkipped(): boolean {
@@ -124,7 +120,13 @@ export function createBatchComponent(
       } else if (data === "\r" || data === "\n") {
         const trimmed = editorText.trim();
         if (trimmed) {
-          drafts.set(activeQuestion().id, { status: "answered", customText: trimmed });
+          // Preserve any previously toggled selectedValues alongside custom text
+          const existing = drafts.get(activeQuestion().id);
+          drafts.set(activeQuestion().id, {
+            status: "answered",
+            customText: trimmed,
+            selectedValues: existing?.selectedValues,
+          });
           advanceToNext();
         }
         return;
@@ -323,26 +325,7 @@ export function createBatchComponent(
   function render(width: number): string[] {
     if (cachedLines) return cachedLines;
 
-    const lines: string[] = [];
-    const w = Math.max(1, width);
-
-    function addLine(text: string) {
-      lines.push(text);
-    }
-
-    function addWrapped(text: string) {
-      const words = text.split(" ");
-      let current = "";
-      for (const word of words) {
-        if (current && current.length + 1 + word.length > w) {
-          addLine(current);
-          current = word;
-        } else {
-          current = current ? current + " " + word : word;
-        }
-      }
-      if (current) addLine(current);
-    }
+    const { lines, addLine, addWrapped, w } = createLineBuilder(width);
 
     // ── Navigation bar ────────────────────────────────────────────
     const useTabs = questions.length <= 6;
@@ -364,7 +347,24 @@ export function createBatchComponent(
           tabs.push(theme.fg(color, tabText));
         }
       }
-      addLine(" " + tabs.join(theme.fg("dim", " \u2502 ")));
+      const joined = tabs.join(theme.fg("dim", " \u2502 "));
+      if (joined.length <= w) {
+        addLine(" " + joined);
+      } else {
+        // Reflow tabs onto multiple lines when they overflow
+        let row = "";
+        for (const tab of tabs) {
+          const sep = row ? theme.fg("dim", " \u2502 ") : "";
+          const test = row + sep + tab;
+          if (test.length > w && row) {
+            addLine(" " + row);
+            row = tab;
+          } else {
+            row = test;
+          }
+        }
+        if (row) addLine(" " + row);
+      }
     } else {
       // Stepper layout: compact list
       const parts: string[] = [];

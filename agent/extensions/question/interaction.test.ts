@@ -371,7 +371,7 @@ describe("buildAnsweredResult", () => {
   });
 
   it("builds answered result for selected option", () => {
-    const answer = buildAnsweredResult(singleSelect, singleSelect.options[1]);
+    const answer = buildAnsweredResult(singleSelect, { selectedOption: singleSelect.options[1] });
     expect(answer).toEqual({
       questionId: "q1",
       status: "answered",
@@ -382,7 +382,7 @@ describe("buildAnsweredResult", () => {
   });
 
   it("builds answered result for custom text", () => {
-    const answer = buildAnsweredResult(singleSelect, undefined, "Green");
+    const answer = buildAnsweredResult(singleSelect, { customText: "Green" });
     expect(answer).toEqual({
       questionId: "q1",
       status: "answered",
@@ -399,12 +399,7 @@ describe("buildAnsweredResult", () => {
       mode: "multi-select",
       options: [{ label: "Red" }, { label: "Blue" }, { label: "Green" }],
     });
-    const answer = buildAnsweredResult(
-      multi,
-      undefined,
-      undefined,
-      ["red", "green"],
-    );
+    const answer = buildAnsweredResult(multi, { selectedValues: ["red", "green"] });
     expect(answer).toEqual({
       questionId: "q2",
       status: "answered",
@@ -416,7 +411,7 @@ describe("buildAnsweredResult", () => {
   });
 
   it("returns skipped when no input provided", () => {
-    const answer = buildAnsweredResult(singleSelect);
+    const answer = buildAnsweredResult(singleSelect, {});
     expect(answer.status).toBe("skipped");
   });
 });
@@ -447,7 +442,7 @@ describe("buildSkippedResult", () => {
 describe("buildResult", () => {
   it("builds answered result", () => {
     const q = normalizeQuestion({ id: "q1", text: "Name?" });
-    const answer = buildAnsweredResult(q, undefined, "Alice");
+    const answer = buildAnsweredResult(q, { customText: "Alice" });
     const result = buildResult("answered", [answer], q);
     expect(result.status).toBe("answered");
     expect(result.answers).toHaveLength(1);

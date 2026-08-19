@@ -69,7 +69,7 @@ export async function runRpcQuestion(
     }
     return buildResult(
       "answered",
-      [buildAnsweredResult(question, undefined, trimmed)],
+      [buildAnsweredResult(question, { customText: trimmed })],
       question,
     );
   }
@@ -107,7 +107,7 @@ export async function runRpcQuestion(
       }
       return buildResult(
         "answered",
-        [buildAnsweredResult(question, undefined, trimmed)],
+        [buildAnsweredResult(question, { customText: trimmed })],
         question,
       );
     }
@@ -117,7 +117,7 @@ export async function runRpcQuestion(
     if (selectedOption) {
       return buildResult(
         "answered",
-        [buildAnsweredResult(question, selectedOption)],
+        [buildAnsweredResult(question, { selectedOption })],
         question,
       );
     }
@@ -177,7 +177,7 @@ export async function runRpcQuestion(
       "answered",
       [
         {
-          ...buildAnsweredResult(question, undefined, undefined, selectedValues),
+          ...buildAnsweredResult(question, { selectedValues }),
         },
       ],
       question,

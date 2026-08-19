@@ -253,51 +253,56 @@ export function buildBatchResult(
 // Answer construction
 // ---------------------------------------------------------------------------
 
+/** Input for building an answered result. */
+export interface AnswerInput {
+  selectedOption?: NormalizedOption;
+  customText?: string;
+  selectedValues?: string[];
+}
+
 /**
  * Build an answered status for a single Question.
  */
 export function buildAnsweredResult(
   question: NormalizedQuestion,
-  selectedOption?: NormalizedOption,
-  customText?: string,
-  selectedValues?: string[],
+  input: AnswerInput,
 ): Answer {
-  if (question.mode === "multi-select" && selectedValues) {
+  if (question.mode === "multi-select" && input.selectedValues) {
     // Multi-select: find labels matching the selected values
     const selectedOptions = question.options.filter((o) =>
-      selectedValues.includes(o.value),
+      input.selectedValues!.includes(o.value),
     );
     return {
       questionId: question.id,
       status: "answered",
       label: selectedOptions.map((o) => o.label).join(", "),
-      value: selectedValues[0],
-      values: selectedValues,
+      value: input.selectedValues[0],
+      values: input.selectedValues,
       wasCustom: false,
     };
   }
 
-  if (customText !== undefined) {
+  if (input.customText !== undefined) {
     return {
       questionId: question.id,
       status: "answered",
-      label: customText,
-      value: normalizeValue(customText),
+      label: input.customText,
+      value: normalizeValue(input.customText),
       wasCustom: true,
     };
   }
 
-  if (selectedOption) {
+  if (input.selectedOption) {
     return {
       questionId: question.id,
       status: "answered",
-      label: selectedOption.label,
-      value: selectedOption.value,
+      label: input.selectedOption.label,
+      value: input.selectedOption.value,
       wasCustom: false,
     };
   }
 
-  // Should not be called without input — return cancelled as fallback
+  // Should not be called without input — return skipped as fallback
   return {
     questionId: question.id,
     status: "skipped",
