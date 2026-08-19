@@ -97,3 +97,36 @@ export interface NormalizedOption {
   label: string;
   value: string;
 }
+
+// ---------------------------------------------------------------------------
+// Batch types — multi-question round
+// ---------------------------------------------------------------------------
+
+/** Minimum number of Questions in a Batch. */
+export const BATCH_MIN = 2;
+/** Maximum number of Questions in a Batch. */
+export const BATCH_MAX = 12;
+
+/** One Question within a Batch input. */
+export type BatchQuestionInput = QuestionInput;
+
+/** Batch input: two to twelve independent Questions. */
+export interface BatchInput {
+  /** Independent Questions with unique IDs and optional labels. */
+  questions: BatchQuestionInput[];
+}
+
+/** Outcome of the overall Batch interaction. */
+export type BatchInteractionStatus = "answered" | "cancelled" | "unavailable";
+
+/** A single answer within a Batch result, keyed by questionId. */
+export type BatchAnswer = Answer;
+
+/** Structured result returned by the batch tool. */
+export interface BatchResult {
+  status: BatchInteractionStatus;
+  /** Answers in original Question order. Empty when cancelled/unavailable. */
+  answers: BatchAnswer[];
+  /** Normalized Questions in original order. */
+  questions: NormalizedQuestion[];
+}

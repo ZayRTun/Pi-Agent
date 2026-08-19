@@ -7,6 +7,8 @@
  */
 
 import type {
+  BatchAnswer,
+  BatchResult,
   NormalizedQuestion,
   QuestionResult,
 } from "./types.js";
@@ -151,4 +153,46 @@ export async function runRpcQuestion(
   }
 
   return buildResult("cancelled", [], question);
+}
+
+/**
+ * Run a Batch interaction in RPC mode using native dialogs.
+ * Collects questions sequentially, preserving the same domain result contract.
+ */
+export async function runRpcBatch(
+  questions: NormalizedQuestion[],
+  ctx: RpcContext,
+): Promise<BatchResult> {
+  const answers: BatchAnswer[] = [];
+
+  for (const question of questions) {
+    // Run single-question interaction for each
+    const result = await runRpcQuestion(question, ctx);
+
+    if (result.status === "cancelled") {
+      // If user cancels any question, cancel the whole batch
+      return {
+        status: "cancelled",
+        answers: [],
+        questions,
+      };
+    }
+
+    if (result.answers.length > 0) {
+      answers.push(result.answers[0]);
+    } else {
+      // No answer returned — treat as cancelled
+      return {
+        status: "cancelled",
+        answers: [],
+        questions,
+      };
+    }
+  }
+
+  return {
+    status: "answered",
+    answers,
+    questions,
+  };
 }

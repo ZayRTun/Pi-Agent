@@ -10,6 +10,10 @@
 
 import type {
   Answer,
+  BatchAnswer,
+  BatchInput,
+  BatchInteractionStatus,
+  BatchResult,
   InteractionStatus,
   NormalizedOption,
   NormalizedQuestion,
@@ -18,6 +22,7 @@ import type {
   QuestionOption,
   QuestionResult,
 } from "./types.js";
+import { BATCH_MIN, BATCH_MAX } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Value normalization
@@ -168,6 +173,83 @@ export function validateQuestion(question: QuestionInput): string | null {
 }
 
 // ---------------------------------------------------------------------------
+// Batch validation
+// ---------------------------------------------------------------------------
+
+/**
+ * Validate a batch of Questions. Returns an error string or null.
+ *
+ * Rules:
+ * - Must have at least BATCH_MIN questions
+ * - Must have at most BATCH_MAX questions
+ * - All Question IDs must be unique (case-insensitive)
+ * - All Question labels must be unique (case-insensitive)
+ * - Each Question must individually pass validateQuestion
+ */
+export function validateBatch(batch: BatchInput): string | null {
+  const { questions } = batch;
+
+  if (!questions || !Array.isArray(questions)) {
+    return "questions must be an array";
+  }
+
+  if (questions.length < BATCH_MIN) {
+    return `Batch must contain at least ${BATCH_MIN} questions (got ${questions.length})`;
+  }
+
+  if (questions.length > BATCH_MAX) {
+    return `Batch must contain at most ${BATCH_MAX} questions (got ${questions.length})`;
+  }
+
+  // Check for duplicate IDs (case-insensitive)
+  const ids = questions.map((q) => q.id?.trim().toLowerCase()).filter(Boolean);
+  const uniqueIds = new Set(ids);
+  if (uniqueIds.size !== ids.length) {
+    return "Duplicate question IDs are not allowed";
+  }
+
+  // Check for duplicate labels (case-insensitive)
+  // Labels are computed from the question text if not provided
+  const labels = questions.map((q) => {
+    const rawLabel = q.label?.trim();
+    if (rawLabel) return rawLabel.toLowerCase();
+    const text = q.text?.trim() ?? "";
+    return (text.length > 20 ? text.slice(0, 20) + "\u2026" : text).toLowerCase();
+  });
+  const uniqueLabels = new Set(labels);
+  if (uniqueLabels.size !== labels.length) {
+    return "Duplicate question labels are not allowed";
+  }
+
+  // Validate each question individually
+  for (const q of questions) {
+    const err = validateQuestion(q);
+    if (err) return err;
+  }
+
+  return null;
+}
+
+/**
+ * Normalize a batch of Questions. Preserves original order.
+ * Does not validate — call {@link validateBatch} first.
+ */
+export function normalizeBatch(batch: BatchInput): NormalizedQuestion[] {
+  return batch.questions.map(normalizeQuestion);
+}
+
+/**
+ * Build a BatchResult from answers and normalized questions.
+ */
+export function buildBatchResult(
+  status: BatchInteractionStatus,
+  answers: BatchAnswer[],
+  questions: NormalizedQuestion[],
+): BatchResult {
+  return { status, answers, questions };
+}
+
+// ---------------------------------------------------------------------------
 // Answer construction
 // ---------------------------------------------------------------------------
 
@@ -267,4 +349,17 @@ export function validateToolInput(input: {
   };
 
   return validateQuestion(question);
+}
+
+/**
+ * Validate the full batch tool input parameters.
+ * Returns an error string or null.
+ */
+export function validateBatchToolInput(input: {
+  questions?: QuestionInput[];
+}): string | null {
+  if (!input.questions || !Array.isArray(input.questions)) {
+    return "questions must be an array";
+  }
+  return validateBatch({ questions: input.questions });
 }

@@ -1,6 +1,6 @@
 # Question Interaction Extension
 
-A stateless Pi extension that provides structured user input collection through the `ask_user_question` tool.
+A stateless Pi extension that provides structured user input collection through the `ask_user_question` and `ask_user_questions` tools.
 
 ## Installation
 
@@ -11,6 +11,74 @@ The extension lives at `~/.pi/agent/extensions/question/` and is auto-discovered
 ### `ask_user_question`
 
 Ask the user one question and collect their answer. Supports four input modes:
+
+| Mode | When to use | Options required |
+|------|-------------|------------------|
+| **free-text** | Short clarifications, names, descriptions | No |
+| **single-select** | Choose one option from a list | Yes |
+| **multi-select** | Choose several options from a list | Yes + `mode: "multi-select"` |
+| **custom "Other"** | Option-based question with a free-text escape hatch | Yes + `allowOther: true` (default for select modes) |
+
+#### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | ✅ | Unique identifier for this question |
+| `text` | string | ✅ | The question text displayed to the user |
+| `label` | string | ❌ | Short navigation label (defaults to truncated text) |
+| `mode` | string | ❌ | Input mode: `"text"`, `"single-select"`, or `"multi-select"`. Inferred from options when omitted. |
+| `options` | array | ❌ | Available options. Each has `label` (required) and `value` (optional, derived from label). |
+| `allowOther` | boolean | ❌ | Allow custom "Other" text input. Default: `false` for text, `true` for select modes. |
+
+#### Mode Inference
+
+When `mode` is omitted, it is inferred from `options`:
+
+- **No options** → `"text"` (free-text input)
+- **Options present** → `"single-select"`
+- **Options present + `mode: "multi-select"`** → `"multi-select"`
+- **`mode: "multi-select"` without options** → Error (invalid)
+
+### `ask_user_questions`
+
+Ask the user two to twelve independent questions and collect their answers in a single batch interaction. Supports mixed input modes across questions.
+
+#### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `questions` | array | ✅ | Two to twelve Question objects. Each has `id`, `text`, and optional `label`, `mode`, `options`, `allowOther`. |
+
+#### Batch Validation
+
+Invalid batches are rejected as tool errors:
+- Fewer than 2 or more than 12 questions
+- Duplicate question IDs (case-insensitive)
+- Duplicate question labels (case-insensitive)
+- Any individual question fails validation
+
+#### Batch Result Contract
+
+```json
+{
+  "status": "answered" | "cancelled" | "unavailable",
+  "answers": [
+    {
+      "questionId": "q1",
+      "status": "answered" | "skipped",
+      "label": "User's selected label or typed text",
+      "value": "machine-value",
+      "values": ["val1", "val2"],
+      "wasCustom": false
+    }
+  ],
+  "questions": [
+    { "id": "q1", "text": "...", "label": "...", "mode": "...", "options": [...], "allowOther": true }
+  ]
+}
+```
+
+The `answers` array preserves the original Question order. Cancelled batches return empty answers. Each answer has `status: "answered"` or `status: "skipped"`.
 
 | Mode | When to use | Options required |
 |------|-------------|-----------------|
@@ -39,7 +107,7 @@ When `mode` is omitted, it is inferred from `options`:
 - **Options present + `mode: "multi-select"`** → `"multi-select"`
 - **`mode: "multi-select"` without options** → Error (invalid)
 
-### Result Contract
+### Single Question Result Contract
 
 The tool returns a structured result:
 
@@ -89,6 +157,8 @@ For answered questions, each `Answer` has:
 
 ### TUI Mode
 
+**Single Question:**
+
 Interactive terminal UI with:
 
 - **Free-text**: Text input with Enter to submit
@@ -98,6 +168,20 @@ Interactive terminal UI with:
 - **Skip**: Separate control below options; not an ordinary option
 - **Cancellation**: Escape from the options view cancels the interaction
 - **Nested Escape**: First Escape exits text editing, second Escape cancels the interaction
+
+**Batch Questions:**
+
+Interactive terminal UI with tabbed/stepper navigation:
+
+- **Tab layout** (≤ 6 questions): Horizontal tabs with status icons (● answered, ○ unanswered)
+- **Stepper layout** (> 6 questions): Compact stepper bar with labels
+- **Number keys**: Press 1–9 to select an option by number
+- **s/S key**: Skip the current question
+- **Tab/Shift+Tab or Arrow Left/Right**: Navigate between questions
+- **Space**: Submit multi-select selections
+- **Enter**: Submit when all questions are answered or skipped
+- **Escape**: Cancel the entire batch (discards all draft answers)
+- **Draft preservation**: Answers are stored while navigating; revisit any question to change your answer
 
 ### RPC Mode
 
@@ -110,11 +194,11 @@ Uses native dialog adapters:
 
 ### JSON/Print Modes
 
-Returns `unavailable` immediately without waiting for input.
+Both tools return `unavailable` immediately without waiting for input.
 
 ## Serialization
 
-All Question interactions are serialized through a shared lock. If a Question interaction is already in progress, a second invocation throws an error rather than competing for the UI.
+All Question interactions (single and batch) are serialized through a shared lock. If a Question interaction is already in progress, a second invocation throws an error rather than competing for the UI.
 
 ## Validation
 
@@ -167,8 +251,9 @@ Tests cover the shared interaction boundary: mode inference, normalization, vali
 question/
 ├── index.ts          # Extension entry point, tool registration
 ├── types.ts          # Shared type contracts
-├── interaction.ts    # Mode inference, normalization, validation
-├── question-tui.ts   # TUI component for interactive mode
+├── interaction.ts    # Mode inference, normalization, validation, batch validation
+├── question-tui.ts   # TUI component for single-question interactive mode
+├── batch-tui.ts      # TUI component for batch-question interactive mode
 ├── rpc-adapter.ts    # RPC adapter using native dialogs
 ├── interaction.test.ts  # Tests at the interaction boundary
 ├── package.json      # Dev dependencies (vitest)

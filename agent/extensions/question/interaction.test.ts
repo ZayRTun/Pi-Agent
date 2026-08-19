@@ -9,14 +9,19 @@
 
 import { describe, expect, it } from "vitest";
 import type { QuestionInput } from "./types.js";
+import { BATCH_MIN, BATCH_MAX } from "./types.js";
 import {
   buildAnsweredResult,
+  buildBatchResult,
   buildResult,
   buildSkippedResult,
   inferMode,
+  normalizeBatch,
   normalizeOption,
   normalizeQuestion,
   normalizeValue,
+  validateBatch,
+  validateBatchToolInput,
   validateQuestion,
   validateToolInput,
 } from "./interaction.js";
@@ -485,6 +490,280 @@ describe("validateToolInput", () => {
   it("accepts valid flat input", () => {
     expect(
       validateToolInput({ id: "q1", text: "Name?" }),
+    ).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// validateBatch
+// ---------------------------------------------------------------------------
+
+function makeBatchQuestion(id: string, text: string): QuestionInput {
+  return { id, text };
+}
+
+describe("validateBatch", () => {
+  it("rejects empty questions array", () => {
+    expect(validateBatch({ questions: [] })).toBe(
+      `Batch must contain at least ${BATCH_MIN} questions (got 0)`,
+    );
+  });
+
+  it("rejects single-question batch", () => {
+    expect(
+      validateBatch({ questions: [makeBatchQuestion("q1", "Hello?")] }),
+    ).toBe(`Batch must contain at least ${BATCH_MIN} questions (got 1)`);
+  });
+
+  it("rejects oversized batch", () => {
+    const questions: QuestionInput[] = [];
+    for (let i = 0; i < BATCH_MAX + 1; i++) {
+      questions.push(makeBatchQuestion(`q${i}`, `Question ${i}?`));
+    }
+    expect(validateBatch({ questions })).toBe(
+      `Batch must contain at most ${BATCH_MAX} questions (got ${BATCH_MAX + 1})`,
+    );
+  });
+
+  it("rejects duplicate IDs (case-insensitive)", () => {
+    expect(
+      validateBatch({
+        questions: [
+          makeBatchQuestion("Q1", "First?"),
+          makeBatchQuestion("q1", "Second?"),
+        ],
+      }),
+    ).toBe("Duplicate question IDs are not allowed");
+  });
+
+  it("rejects duplicate labels (explicit, case-insensitive)", () => {
+    expect(
+      validateBatch({
+        questions: [
+          { ...makeBatchQuestion("q1", "First?"), label: "Scope" },
+          { ...makeBatchQuestion("q2", "Second?"), label: "scope" },
+        ],
+      }),
+    ).toBe("Duplicate question labels are not allowed");
+  });
+
+  it("rejects duplicate labels (derived from text, case-insensitive)", () => {
+    expect(
+      validateBatch({
+        questions: [
+          makeBatchQuestion("q1", "What is your name?"),
+          makeBatchQuestion("q2", "what is your name?"),
+        ],
+      }),
+    ).toBe("Duplicate question labels are not allowed");
+  });
+
+  it("rejects batch when a question has invalid text", () => {
+    expect(
+      validateBatch({
+        questions: [
+          makeBatchQuestion("q1", "Valid?"),
+          { id: "q2", text: "" },
+        ],
+      }),
+    ).toBe("Question text must be a non-empty string");
+  });
+
+  it("rejects batch when a question has invalid ID", () => {
+    expect(
+      validateBatch({
+        questions: [
+          makeBatchQuestion("q1", "Valid?"),
+          { id: "", text: "Also valid?" },
+        ],
+      }),
+    ).toBe("Question id must be a non-empty string");
+  });
+
+  it("accepts valid 2-question batch", () => {
+    expect(
+      validateBatch({
+        questions: [
+          makeBatchQuestion("q1", "First?"),
+          makeBatchQuestion("q2", "Second?"),
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  it("accepts valid 12-question batch", () => {
+    const questions: QuestionInput[] = [];
+    for (let i = 0; i < BATCH_MAX; i++) {
+      questions.push(makeBatchQuestion(`q${i}`, `Question ${i}?`));
+    }
+    expect(validateBatch({ questions })).toBeNull();
+  });
+
+  it("accepts batch with mixed modes", () => {
+    expect(
+      validateBatch({
+        questions: [
+          makeBatchQuestion("q1", "Name?"),
+          {
+            id: "q2",
+            text: "Color?",
+            options: [{ label: "Red" }, { label: "Blue" }],
+          },
+          {
+            id: "q3",
+            text: "Tags?",
+            mode: "multi-select",
+            options: [{ label: "A" }, { label: "B" }],
+          },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  it("accepts batch with different explicit labels", () => {
+    expect(
+      validateBatch({
+        questions: [
+          { ...makeBatchQuestion("q1", "What is your name?"), label: "Name" },
+          { ...makeBatchQuestion("q2", "What is your age?"), label: "Age" },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects non-array questions", () => {
+    expect(validateBatch({ questions: undefined as any })).toBe(
+      "questions must be an array",
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// normalizeBatch
+// ---------------------------------------------------------------------------
+
+describe("normalizeBatch", () => {
+  it("normalizes all questions in order", () => {
+    const result = normalizeBatch({
+      questions: [
+        makeBatchQuestion("q1", "  First?  "),
+        makeBatchQuestion("q2", "Second?"),
+      ],
+    });
+    expect(result).toHaveLength(2);
+    expect(result[0].id).toBe("q1");
+    expect(result[0].text).toBe("First?");
+    expect(result[1].id).toBe("q2");
+    expect(result[1].text).toBe("Second?");
+  });
+
+  it("preserves original order", () => {
+    const result = normalizeBatch({
+      questions: [
+        makeBatchQuestion("c", "Third?"),
+        makeBatchQuestion("a", "First?"),
+        makeBatchQuestion("b", "Second?"),
+      ],
+    });
+    expect(result.map((q) => q.id)).toEqual(["c", "a", "b"]);
+  });
+
+  it("uses explicit labels when provided", () => {
+    const result = normalizeBatch({
+      questions: [
+        { ...makeBatchQuestion("q1", "Long text here"), label: "Q1" },
+        { ...makeBatchQuestion("q2", "Also long"), label: "Q2" },
+      ],
+    });
+    expect(result[0].label).toBe("Q1");
+    expect(result[1].label).toBe("Q2");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildBatchResult
+// ---------------------------------------------------------------------------
+
+describe("buildBatchResult", () => {
+  it("builds answered batch result", () => {
+    const qs = normalizeBatch({
+      questions: [
+        makeBatchQuestion("q1", "First?"),
+        makeBatchQuestion("q2", "Second?"),
+      ],
+    });
+    const answers = [
+      { questionId: "q1", status: "answered" as const, label: "A" },
+      { questionId: "q2", status: "skipped" as const },
+    ];
+    const result = buildBatchResult("answered", answers, qs);
+    expect(result.status).toBe("answered");
+    expect(result.answers).toHaveLength(2);
+    expect(result.questions).toHaveLength(2);
+    expect(result.questions[0].id).toBe("q1");
+    expect(result.questions[1].id).toBe("q2");
+  });
+
+  it("builds cancelled batch result with empty answers", () => {
+    const result = buildBatchResult("cancelled", [], []);
+    expect(result.status).toBe("cancelled");
+    expect(result.answers).toEqual([]);
+    expect(result.questions).toEqual([]);
+  });
+
+  it("preserves answer order matching question order", () => {
+    const qs = normalizeBatch({
+      questions: [
+        makeBatchQuestion("q1", "A?"),
+        makeBatchQuestion("q2", "B?"),
+        makeBatchQuestion("q3", "C?"),
+      ],
+    });
+    const answers = [
+      { questionId: "q1", status: "answered" as const, label: "alpha" },
+      { questionId: "q2", status: "skipped" as const },
+      { questionId: "q3", status: "answered" as const, label: "gamma" },
+    ];
+    const result = buildBatchResult("answered", answers, qs);
+    expect(result.answers.map((a) => a.questionId)).toEqual([
+      "q1",
+      "q2",
+      "q3",
+    ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// validateBatchToolInput
+// ---------------------------------------------------------------------------
+
+describe("validateBatchToolInput", () => {
+  it("rejects missing questions", () => {
+    expect(validateBatchToolInput({})).toBe("questions must be an array");
+  });
+
+  it("rejects questions that is not an array", () => {
+    expect(
+      validateBatchToolInput({ questions: "not-an-array" as any }),
+    ).toBe("questions must be an array");
+  });
+
+  it("validates through batch validation", () => {
+    expect(
+      validateBatchToolInput({
+        questions: [makeBatchQuestion("q1", "A?"), { id: "q1", text: "B?" }],
+      }),
+    ).toBe("Duplicate question IDs are not allowed");
+  });
+
+  it("accepts valid batch input", () => {
+    expect(
+      validateBatchToolInput({
+        questions: [
+          makeBatchQuestion("q1", "Name?"),
+          makeBatchQuestion("q2", "Color?"),
+        ],
+      }),
     ).toBeNull();
   });
 });
