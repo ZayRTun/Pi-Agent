@@ -1,10 +1,39 @@
 # Question Interaction Extension
 
-A stateless Pi extension that provides structured user input collection through the `ask_user_question` and `ask_user_questions` tools.
+A stateless Pi extension that provides structured user input collection through the `ask_user_question` and `ask_user_questions` tools. Designed for use by future skill authors without modifying packaged skills.
 
 ## Installation
 
 The extension lives at `~/.pi/agent/extensions/question/` and is auto-discovered by Pi.
+
+## Public Types
+
+All shared types are exported from the extension entry point for use in tests and integrations:
+
+```typescript
+import type {
+  // Input types
+  QuestionInput,
+  QuestionOption,
+  BatchInput,
+  BatchQuestionInput,
+  // Output types
+  Answer,
+  BatchAnswer,
+  QuestionResult,
+  BatchResult,
+  // Normalized types
+  NormalizedQuestion,
+  NormalizedOption,
+  // Status types
+  QuestionAnswerStatus,
+  InteractionStatus,
+  BatchInteractionStatus,
+  // Constants
+  BATCH_MIN,
+  BATCH_MAX,
+} from "~/.pi/agent/extensions/question/index.js";
+```
 
 ## Tools
 
@@ -38,6 +67,32 @@ When `mode` is omitted, it is inferred from `options`:
 - **Options present** → `"single-select"`
 - **Options present + `mode: "multi-select"`** → `"multi-select"`
 - **`mode: "multi-select"` without options** → Error (invalid)
+
+#### Result Contract
+
+```json
+{
+  "status": "answered" | "cancelled" | "unavailable",
+  "answers": [
+    {
+      "questionId": "q1",
+      "status": "answered" | "skipped",
+      "label": "User's selected label or typed text",
+      "value": "machine-value",
+      "values": ["val1", "val2"],
+      "wasCustom": false
+    }
+  ],
+  "question": {
+    "id": "q1",
+    "text": "The original question",
+    "label": "Navigation label",
+    "mode": "single-select",
+    "options": [...],
+    "allowOther": true
+  }
+}
+```
 
 ### `ask_user_questions`
 
@@ -80,62 +135,7 @@ Invalid batches are rejected as tool errors:
 
 The `answers` array preserves the original Question order. Cancelled batches return empty answers. Each answer has `status: "answered"` or `status: "skipped"`.
 
-| Mode | When to use | Options required |
-|------|-------------|-----------------|
-| **free-text** | Short clarifications, names, descriptions | No |
-| **single-select** | Choose one option from a list | Yes |
-| **multi-select** | Choose several options from a list | Yes + `mode: "multi-select"` |
-| **custom "Other"** | Option-based question with a free-text escape hatch | Yes + `allowOther: true` (default for select modes) |
-
-### Parameters
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | ✅ | Unique identifier for this question |
-| `text` | string | ✅ | The question text displayed to the user |
-| `label` | string | ❌ | Short navigation label (defaults to truncated text) |
-| `mode` | string | ❌ | Input mode: `"text"`, `"single-select"`, or `"multi-select"`. Inferred from options when omitted. |
-| `options` | array | ❌ | Available options. Each has `label` (required) and `value` (optional, derived from label). |
-| `allowOther` | boolean | ❌ | Allow custom "Other" text input. Default: `false` for text, `true` for select modes. |
-
-### Mode Inference
-
-When `mode` is omitted, it is inferred from `options`:
-
-- **No options** → `"text"` (free-text input)
-- **Options present** → `"single-select"`
-- **Options present + `mode: "multi-select"`** → `"multi-select"`
-- **`mode: "multi-select"` without options** → Error (invalid)
-
-### Single Question Result Contract
-
-The tool returns a structured result:
-
-```json
-{
-  "status": "answered" | "cancelled" | "unavailable",
-  "answers": [
-    {
-      "questionId": "q1",
-      "status": "answered" | "skipped",
-      "label": "User's selected label or typed text",
-      "value": "machine-value",
-      "values": ["val1", "val2"],
-      "wasCustom": false
-    }
-  ],
-  "question": {
-    "id": "q1",
-    "text": "The original question",
-    "label": "Navigation label",
-    "mode": "single-select",
-    "options": [...],
-    "allowOther": true
-  }
-}
-```
-
-### Outcome Types
+## Outcome Types
 
 | Status | Meaning |
 |--------|---------|
@@ -190,7 +190,7 @@ Uses native dialog adapters:
 - Free-text → `ctx.ui.input()`
 - Single-select → `ctx.ui.select()` with option labels
 - Multi-select → Sequential `ctx.ui.confirm()` per option
-- Skip → Explicit "Skip" option in select dialogs
+- Skip → Explicit "Skip" option in select dialogs or first confirm prompt in multi-select
 
 ### JSON/Print Modes
 
@@ -222,17 +222,27 @@ The extension is stateless. It does not:
 - Detect skill names
 - Modify packaged skills
 
-Calling workflows (grilling, wayfinder, etc.) own all question round state, decisions, and documentation.
+**Workflow state remains owned by the calling skill.** The calling workflow (grilling, wayfinder, etc.) owns all question round state, decisions, and documentation. The extension only facilitates transient UI exchanges.
 
 ## Tool Metadata
 
-The tool provides generic guidance through `promptSnippet` and `promptGuidelines`:
+The tools provide generic guidance through `promptSnippet` and `promptGuidelines`:
 
-- When to use `ask_user_question` (structured user input)
-- When not to use it (skill-internal workflow questions)
+- When to use `ask_user_question` / `ask_user_questions` (structured user input)
+- When not to use them (skill-internal workflow questions)
 - How to use options for select/multi-select modes
 
-The extension does not reference grilling, wayfinder, or any specific skill name.
+The extension does not reference grilling, wayfinder, or any specific skill name. It is designed to be reusable by any skill author.
+
+## Integration Guide
+
+To use this extension in a new skill:
+
+1. The tools `ask_user_question` and `ask_user_questions` are auto-registered.
+2. Import shared types from the extension for type-safe results.
+3. All results follow the same contract: `status`, `answers`, and `question`/`questions`.
+4. Handle `cancelled` and `unavailable` outcomes gracefully — they are valid terminal states.
+5. `skipped` answers within a batch do not cancel the batch; only explicit Escape cancels.
 
 ## Testing
 
@@ -243,19 +253,20 @@ cd ~/.pi/agent/extensions/question
 npm test
 ```
 
-Tests cover the shared interaction boundary: mode inference, normalization, validation, answer construction, and result formatting. They do not test TUI rendering or private component state.
+Tests cover the shared interaction boundary: mode inference, normalization, validation, answer construction, result formatting, and RPC adapter runtime parity. They do not test TUI rendering or private component state.
 
 ## File Structure
 
 ```
 question/
-├── index.ts          # Extension entry point, tool registration
-├── types.ts          # Shared type contracts
-├── interaction.ts    # Mode inference, normalization, validation, batch validation
-├── question-tui.ts   # TUI component for single-question interactive mode
-├── batch-tui.ts      # TUI component for batch-question interactive mode
-├── rpc-adapter.ts    # RPC adapter using native dialogs
-├── interaction.test.ts  # Tests at the interaction boundary
-├── package.json      # Dev dependencies (vitest)
-└── README.md         # This file
+├── index.ts              # Extension entry point, tool registration, type exports
+├── types.ts              # Shared type contracts
+├── interaction.ts        # Mode inference, normalization, validation, batch validation
+├── question-tui.ts       # TUI component for single-question interactive mode
+├── batch-tui.ts          # TUI component for batch-question interactive mode
+├── rpc-adapter.ts        # RPC adapter using native dialogs
+├── interaction.test.ts   # Tests at the interaction boundary
+├── rpc-adapter.test.ts   # Tests for RPC adapter runtime parity
+├── package.json          # Dev dependencies (vitest)
+└── README.md             # This file
 ```

@@ -5,9 +5,8 @@
  * allowing an agent to collect one free-text, single-select, multi-select,
  * or custom "Other" Answer through a reusable interaction mechanism.
  *
- * The extension does not own workflow state. Calling skills (grilling,
- * wayfinder, etc.) remain responsible for question rounds, decisions,
- * and session state.
+ * The extension does not own workflow state. Calling skills remain
+ * responsible for question rounds, decisions, and session state.
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -25,11 +24,20 @@ import {
   validateToolInput,
 } from "./interaction.js";
 import type {
+  BatchAnswer,
+  BatchInput,
+  BatchInteractionStatus,
+  BatchQuestionInput,
   BatchResult,
+  InteractionStatus,
+  NormalizedOption,
   NormalizedQuestion,
+  QuestionAnswerStatus,
   QuestionInput,
+  QuestionOption,
   QuestionResult,
 } from "./types.js";
+import { BATCH_MIN, BATCH_MAX } from "./types.js";
 import { createBatchComponent } from "./batch-tui.js";
 import { createQuestionComponent } from "./question-tui.js";
 import { runRpcBatch, runRpcQuestion } from "./rpc-adapter.js";
@@ -150,6 +158,23 @@ const BatchToolParams = Type.Object({
 // Extension entry point
 // ---------------------------------------------------------------------------
 
+// Re-export shared types for tests and future integrations
+export type {
+  BatchAnswer,
+  BatchInput,
+  BatchInteractionStatus,
+  BatchQuestionInput,
+  BatchResult,
+  InteractionStatus,
+  NormalizedOption,
+  NormalizedQuestion,
+  QuestionAnswerStatus,
+  QuestionInput,
+  QuestionOption,
+  QuestionResult,
+};
+export { BATCH_MIN, BATCH_MAX };
+
 export default function questionExtension(pi: ExtensionAPI) {
   // -----------------------------------------------------------------------
   // Single Question tool
@@ -165,7 +190,7 @@ export default function questionExtension(pi: ExtensionAPI) {
       "Use ask_user_question when you need structured user input that cannot be answered by editing files or running commands.",
       "Use ask_user_question with options for single-select or multi-select choices. Omit options for free-text questions.",
       "Use ask_user_question with mode 'multi-select' when the user should choose several options from a list.",
-      "Do not use ask_user_question for questions that are part of a skill's internal workflow (e.g. grilling design questions). Use it only for clear, standalone clarifications.",
+      "Do not use ask_user_question for questions that are part of a skill's internal workflow (e.g. design review or brainstorming questions). Use it only for clear, standalone clarifications.",
     ],
     parameters: QuestionToolParams,
     executionMode: "sequential",
