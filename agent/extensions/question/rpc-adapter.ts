@@ -39,7 +39,26 @@ export async function runRpcQuestion(
   ctx: RpcContext,
 ): Promise<QuestionResult> {
   if (question.mode === "text") {
-    // Free text: use input dialog
+    // Free text: present a choice between typing and skipping,
+    // mirroring the TUI Skip control.
+    const choice = await ctx.ui.select(question.text, [
+      "Type your answer…",
+      "Skip",
+    ]);
+
+    if (choice === undefined) {
+      return buildResult("cancelled", [], question);
+    }
+
+    if (choice === "Skip") {
+      return buildResult(
+        "answered",
+        [buildSkippedResult(question)],
+        question,
+      );
+    }
+
+    // User chose to type
     const answer = await ctx.ui.input(question.text, "Type your answer…");
     if (answer === undefined) {
       return buildResult("cancelled", [], question);
@@ -107,6 +126,19 @@ export async function runRpcQuestion(
   }
 
   if (question.mode === "multi-select") {
+    // First: offer a Skip control, mirroring the TUI.
+    const skipChoice = await ctx.ui.confirm(
+      question.text,
+      "Skip this question?",
+    );
+    if (skipChoice) {
+      return buildResult(
+        "answered",
+        [buildSkippedResult(question)],
+        question,
+      );
+    }
+
     // Sequential selection: ask one at a time
     const selectedValues: string[] = [];
 
