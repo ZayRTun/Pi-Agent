@@ -24,6 +24,7 @@ import {
   validateToolInput,
 } from "./interaction.js";
 import type {
+  Answer,
   BatchAnswer,
   BatchInput,
   BatchInteractionStatus,
