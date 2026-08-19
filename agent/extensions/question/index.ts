@@ -160,6 +160,7 @@ const BatchToolParams = Type.Object({
 
 // Re-export shared types for tests and future integrations
 export type {
+  Answer,
   BatchAnswer,
   BatchInput,
   BatchInteractionStatus,
