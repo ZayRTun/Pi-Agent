@@ -1,30 +1,18 @@
 {
-  "lastChangelogVersion": "0.84.2",
-  "theme": "rose-pine",
+  "hideThinkingBlock": true,
+  "lastChangelogVersion": "0.84.3",
+  "theme": "dark",
+  "defaultProvider": "opencode-go",
+  "defaultModel": "gpt-5.6-luna",
+  "defaultThinkingLevel": "high",
+  "tuiMode": "fullscreen",
   "packages": [
-    "npm:@firstpick/pi-themes-bundle",
-    "npm:@firstpick/pi-extension-safety-guard",
+    "npm:pi-web-access",
     "npm:pi-subagents",
-    "npm:pi-hermes-memory"
+    "npm:@ff-labs/pi-fff",
+    "npm:pi-mcp-adapter",
+    "npm:@juicesharp/rpiv-ask-user-question"
   ],
   "quietStartup": true,
-  "clearOnStart": true,
-  "extensions": [
-    "/Users/zayar/.pi/agent/extensions/prime-header.ts"
-  ],
-  "defaultProvider": "opencode-go",
-  "defaultModel": "deepseek-v4-flash",
-  "defaultThinkingLevel": "high",
-  "editorPaddingX": 0,
-  "rsl": false,
-  "outputPad": 1,
-  "hideThinkingBlock": true,
-  "tuiMode": "fullscreen",
-  "terminal": {
-    "imageWidthCells": 60,
-    "showTerminalProgress": false
-  },
-  "images": {
-    "blockImages": false
-  }
+  "fullscreenExitOutput": "resume-hint"
 }
