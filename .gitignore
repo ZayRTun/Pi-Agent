@@ -9,6 +9,8 @@ agent/mcp-cache.json
 agent/mcp-npx-cache.json
 agent/pi-crash.log
 agent/run-history.jsonl
+agent/fff/
+web-search-cache/
 .pi-subagents/
 
 # --- Memory stores (personal data; intentionally not backed up) ---
