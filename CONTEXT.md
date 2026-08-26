@@ -2,6 +2,37 @@
 
 This context defines the language for collecting user input during agent workflows such as grilling and wayfinding without moving workflow state into the interaction mechanism.
 
+## Sub-agent Delegation
+
+**Sub-agent**:
+An agent session with its own isolated context, invoked to perform one task and return its result to the invoking session.
+_Avoid_: Worker, child process (when referring to the concept rather than the mechanism)
+
+**Delegation**:
+Assigning a self-contained task to a Sub-agent instead of doing the work in the main session.
+_Avoid_: Dispatch, spawning (when referring to the concept)
+
+**Blocking delegation**:
+A Delegation where the main session waits for the Sub-agent's result before continuing. The only supported form.
+_Avoid_: Background run, async run
+
+## Run States
+
+Every Delegation is in exactly one Run State at any moment.
+
+**Running**:
+The Sub-agent is still executing its task.
+
+**Succeeded**:
+The Sub-agent finished its task successfully.
+
+**Failed**:
+The Sub-agent finished unsuccessfully due to its own error.
+
+**Aborted**:
+The user deliberately stopped the Sub-agent before it finished. Distinct from Failed — stopping was chosen, not suffered.
+_Avoid_: treating Aborted as Failed
+
 ## Questioning
 
 **Question**:

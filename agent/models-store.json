@@ -224,8 +224,8 @@
         }
       },
       {
-        "id": "grok-4.5",
-        "name": "Grok 4.5",
+        "id": "grok-4.6",
+        "name": "Grok 4.6",
         "api": "openai-responses",
         "provider": "opencode-go",
         "baseUrl": "https://opencode.ai/zen/go/v1",
@@ -251,7 +251,7 @@
           "low": "low",
           "medium": "medium",
           "high": "high",
-          "xhigh": null,
+          "xhigh": "xhigh",
           "max": null
         }
       },
@@ -664,8 +664,8 @@
         "maxTokens": 131072
       }
     ],
-    "checkedAt": 1787644446279,
-    "lastModified": 1787571275000,
-    "etag": "W/\"5b05133dff9e8c4b6b73a2000e9cbc6a\""
+    "checkedAt": 1787745167592,
+    "lastModified": 1787740211000,
+    "etag": "W/\"30a10572fb95efd8d75992ce8c1019e2\""
   }
 }

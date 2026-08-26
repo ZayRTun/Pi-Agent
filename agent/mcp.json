@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "codegraph": {
+      "command": "/Users/zayar/.local/bin/codegraph",
+      "args": [
+        "serve",
+        "--mcp"
+      ],
+      "lifecycle": "lazy",
+      "directTools": [
+        "codegraph_explore"
+      ],
+      "toolPrefix": "none"
+    }
+  }
+}
