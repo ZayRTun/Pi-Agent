@@ -4,6 +4,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
+import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
 import { CONFIG_DIR_NAME, getAgentDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
 
 export type AgentScope = "user" | "project" | "both";
@@ -15,6 +16,10 @@ export interface AgentConfig {
 	toolsSpecified: boolean;
 	allowSubagents: boolean;
 	model?: string;
+	/** Validated `thinking` value; absent means the Sub-agent inherits the session's level. */
+	thinking?: ThinkingLevel;
+	/** The unrecognized `thinking` value, kept so execute() can warn about it. */
+	invalidThinking?: string;
 	systemPrompt: string;
 	source: "user" | "project";
 	filePath: string;
@@ -39,7 +44,28 @@ type AgentFrontmatter = {
 	tools?: unknown;
 	allowSubagents?: unknown;
 	model?: unknown;
+	thinking?: unknown;
 };
+
+export const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
+
+/**
+ * Split a frontmatter `thinking` value into a usable level and, when the value
+ * is unrecognized, the raw text so the caller can warn about it.
+ *
+ * An empty field (`thinking:`), which YAML parses as null, means "not declared"
+ * rather than a mistake. An unrecognized value is reported rather than silently
+ * ignored: a typo would otherwise look like a level that simply never took
+ * effect, which is harder to notice than a warning.
+ */
+function parseThinking(value: unknown): { level?: ThinkingLevel; invalid?: string } {
+	if (value === undefined || value === null) return {};
+	if (typeof value !== "string") return { invalid: String(value) };
+
+	const level = value.trim();
+	if ((THINKING_LEVELS as readonly string[]).includes(level)) return { level: level as ThinkingLevel };
+	return { invalid: level };
+}
 
 /**
  * Normalize a frontmatter `tools` value to a list of tool names.
@@ -104,6 +130,8 @@ function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig
 		const tools = parseToolList(frontmatter.tools);
 		if (tools === null) continue;
 
+		const thinking = parseThinking(frontmatter.thinking);
+
 		agents.push({
 			name: frontmatter.name,
 			description: frontmatter.description,
@@ -111,6 +139,8 @@ function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig
 			toolsSpecified: frontmatter.tools !== undefined,
 			allowSubagents: frontmatter.allowSubagents === true,
 			model: typeof frontmatter.model === "string" ? frontmatter.model : undefined,
+			thinking: thinking.level,
+			invalidThinking: thinking.invalid,
 			systemPrompt: body,
 			source,
 			filePath,

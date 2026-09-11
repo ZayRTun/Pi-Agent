@@ -8,7 +8,10 @@ Each agent file needs YAML frontmatter with `name` and `description`. Optional f
 
 - `tools` — a comma-separated list or YAML array. An explicit list is a strict Pi tool allowlist; malformed values cause that agent to be skipped.
 - `model` — an optional `provider/model` override.
+- `thinking` — an optional level: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, or `max`. Unrecognized values warn and are treated as absent.
 - `allowSubagents` — defaults to `false`. Set it only for a deliberate orchestrator; ordinary leaf agents cannot recursively call `subagent`.
+
+`model` and `thinking` are independent: each is used when declared and inherited from the invoking session otherwise, so declaring a model does not change the thinking level.
 
 The prompt body is appended to Pi's normal system prompt. Keep it focused on the agent's role, process, and handoff format. Tasks are intentionally not copied from the parent session, so callers must pass the spec, ticket, fixed point, artifact path, or other necessary context explicitly.
 

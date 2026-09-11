@@ -1,9 +1,9 @@
 {
   "hideThinkingBlock": true,
-  "lastChangelogVersion": "0.84.3",
+  "lastChangelogVersion": "0.85.1",
   "theme": "sumi-night",
-  "defaultProvider": "opencode-go",
-  "defaultModel": "gpt-5.6-luna",
+  "defaultProvider": "commandcode",
+  "defaultModel": "z-ai/glm-5.3-flash",
   "defaultThinkingLevel": "high",
   "tuiMode": "fullscreen",
   "packages": [
@@ -11,7 +11,8 @@
     "npm:@ff-labs/pi-fff",
     "npm:pi-mcp-adapter",
     "npm:@juicesharp/rpiv-ask-user-question",
-    "npm:@victor-software-house/pi-curated-themes"
+    "npm:@victor-software-house/pi-curated-themes",
+    "npm:pi-commandcode-provider"
   ],
   "quietStartup": true,
   "fullscreenExitOutput": "resume-hint",
@@ -21,5 +22,11 @@
     "sound": true,
     "volume": 0.4,
     "sound_pack": "opencode.default"
+  },
+  "compaction": {
+    "enabled": true
+  },
+  "terminal": {
+    "showTerminalProgress": false
   }
 }

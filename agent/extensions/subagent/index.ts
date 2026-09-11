@@ -28,7 +28,7 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
-import { type AgentConfig, type AgentScope, discoverAgents } from "./agents.ts";
+import { type AgentConfig, type AgentScope, discoverAgents, THINKING_LEVELS } from "./agents.ts";
 
 const MAX_PARALLEL_TASKS = 8;
 const MAX_CONCURRENCY = 4;
@@ -418,12 +418,13 @@ async function runSingleAgent(
 	}
 
 	const args: string[] = ["--mode", "json", "-p", "--no-session"];
-	const inheritsDispatchConfig = !agent.model;
+	// Model and thinking level are independent axes: each one is taken from the
+	// agent definition when declared, and inherited from the invoking session
+	// otherwise. Declaring a model therefore must not disturb the level.
 	const model = agent.model ?? dispatchDefaults.model;
 	if (model) args.push("--model", model);
-	if (inheritsDispatchConfig && dispatchDefaults.thinkingLevel) {
-		args.push("--thinking", dispatchDefaults.thinkingLevel);
-	}
+	const thinking = agent.thinking ?? dispatchDefaults.thinkingLevel;
+	if (thinking) args.push("--thinking", thinking);
 	if (agent.toolsSpecified) args.push("--tools", agent.tools?.join(",") ?? "");
 	if (!agent.allowSubagents) args.push("--exclude-tools", "subagent");
 
@@ -628,6 +629,16 @@ const SubagentParams = Type.Object({
 });
 
 export default function (pi: ExtensionAPI) {
+	// Resolve the user-scope roster once at load so the tool description tells
+	// the model the exact agent names to use (prevents invented names like
+	// "general" that used to fail validation). Execution re-discovers agents per
+	// call, so new agents still work without a restart — only the description
+	// lags until the next restart.
+	const rosterNames = discoverAgents(process.cwd(), "user")
+		.agents.map((a) => a.name)
+		.sort()
+		.join(", ");
+
 	pi.registerTool({
 		name: "subagent",
 		label: "Subagent",
@@ -635,6 +646,7 @@ export default function (pi: ExtensionAPI) {
 			"Delegate tasks to specialized subagents with isolated context.",
 			"Modes: single (agent + task), parallel (tasks array), chain (sequential with {previous} placeholder).",
 			`Default agent scope is "user" (from ${path.join(getAgentDir(), "agents")}).`,
+			`Available agents: ${rosterNames || "none"}.`,
 			`To enable project-local agents in ${CONFIG_DIR_NAME}/agents, set agentScope: "both" (or "project").`,
 			"Leaf agents cannot recursively call subagent unless their frontmatter sets allowSubagents: true.",
 		].join(" "),
@@ -713,6 +725,19 @@ export default function (pi: ExtensionAPI) {
 						content: [{ type: "text", text: "Canceled: project-local agents not approved." }],
 						details: makeDetails(mode)([]),
 					};
+			}
+
+			// An unrecognized `thinking` value must not block the delegation: warn the
+			// user, then fall through — the agent runs and inherits the session's level.
+			if (ctx.hasUI) {
+				for (const name of requestedAgentNames) {
+					const invalid = agents.find((a) => a.name === name)?.invalidThinking;
+					if (!invalid) continue;
+					ctx.ui.notify(
+						`Agent "${name}" has an unrecognized thinking level "${invalid}"; using the session's level instead. Valid levels: ${THINKING_LEVELS.join(", ")}.`,
+						"warning",
+					);
+				}
 			}
 
 			if (params.chain && params.chain.length > 0) {
