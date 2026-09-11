@@ -1,6 +1,7 @@
 ---
 name: researcher
 description: Primary-source research specialist that returns a concise, cited decision briefing and can produce one linked research artifact
+color: green
 tools: read, ls, fffind, ffgrep, web_search, fetch_content, get_search_content, source_check, write
 model: commandcode/z-ai/glm-5.3-flash
 thinking: high

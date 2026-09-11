@@ -22,6 +22,8 @@ export interface AgentConfig {
 	invalidThinking?: string;
 	/** Declared per-agent timeout in minutes; absent means the call-level or global default. */
 	timeoutMinutes?: number;
+	/** Badge color for the agent name (Claude-Code style); absent or invalid renders no badge. */
+	color?: string;
 	systemPrompt: string;
 	source: "user" | "project";
 	filePath: string;
@@ -48,6 +50,7 @@ type AgentFrontmatter = {
 	model?: unknown;
 	thinking?: unknown;
 	timeoutMinutes?: unknown;
+	color?: unknown;
 };
 
 export const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
@@ -170,6 +173,7 @@ function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig
 			thinking: thinking.level,
 			invalidThinking: thinking.invalid,
 			timeoutMinutes: clampTimeoutMinutes(frontmatter.timeoutMinutes),
+			color: typeof frontmatter.color === "string" ? frontmatter.color : undefined,
 			systemPrompt: body,
 			source,
 			filePath,
@@ -228,4 +232,88 @@ export function formatAgentList(agents: AgentConfig[], maxItems: number): { text
 		text: listed.map((a) => `${a.name} (${a.source}): ${a.description}`).join("; "),
 		remaining,
 	};
+}
+
+// ── Agent name badges ──────────────────────────────────────────────────────
+// Claude-Code-style name badges: the configured color becomes the background,
+// with black or white text picked by WCAG contrast. Adapted from the
+// pi-subagents extension's agent-color.ts.
+
+const NAMED_AGENT_COLORS: Record<string, string> = {
+	red: "#DC2626",
+	blue: "#6A9BCC",
+	green: "#16A34A",
+	yellow: "#CA8A04",
+	purple: "#827DBD",
+	orange: "#D97757",
+	pink: "#C46686",
+	cyan: "#0891B2",
+};
+
+/** Resolve a frontmatter `color:` value to normalized #RRGGBB, or undefined. */
+export function resolveAgentColor(value: unknown): string | undefined {
+	if (typeof value !== "string") return undefined;
+	const normalized = value.trim().toLowerCase();
+	const resolved = NAMED_AGENT_COLORS[normalized] ?? normalized;
+	return /^#[0-9a-f]{6}$/i.test(resolved) ? resolved.toUpperCase() : undefined;
+}
+
+type BadgeRgb = { r: number; g: number; b: number };
+
+function parseBadgeHex(hex: string): BadgeRgb {
+	return {
+		r: Number.parseInt(hex.slice(1, 3), 16),
+		g: Number.parseInt(hex.slice(3, 5), 16),
+		b: Number.parseInt(hex.slice(5, 7), 16),
+	};
+}
+
+function badgeLuminance({ r, g, b }: BadgeRgb): number {
+	const linear = (value: number) => {
+		const channel = value / 255;
+		return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+	};
+	return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+}
+
+export interface AgentBadgeTheme {
+	fg(color: string, text: string): string;
+	bold(text: string): string;
+	getColorMode?: () => string;
+}
+
+/**
+ * Render an agent name as a padded background badge when `color` is valid;
+ * otherwise fall back to the theme's toolTitle styling. Invalid colors render
+ * no badge rather than throwing: discovery must never break on cosmetics.
+ */
+export function renderAgentBadge(
+	name: string,
+	color: string | undefined,
+	theme: AgentBadgeTheme,
+	opts?: { bold?: boolean },
+): string {
+	const resolved = resolveAgentColor(color);
+	const label = opts?.bold === false ? name : theme.bold(name);
+	if (!resolved) return theme.fg("toolTitle", label);
+	const rgb = parseBadgeHex(resolved);
+	const mode = theme.getColorMode?.() ?? "truecolor";
+	let open: string;
+	let shown: BadgeRgb = rgb;
+	if (mode === "256color") {
+		// Quantize to the xterm-256 cube; judge contrast against the shown color.
+		const steps = [0, 95, 135, 175, 215, 255];
+		const near = (v: number) => steps.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a));
+		shown = { r: near(rgb.r), g: near(rgb.g), b: near(rgb.b) };
+		const idx = 16 + 36 * steps.indexOf(shown.r) + 6 * steps.indexOf(shown.g) + steps.indexOf(shown.b);
+		open = `\u001b[48;5;${idx}m`;
+	} else {
+		open = `\u001b[48;2;${rgb.r};${rgb.g};${rgb.b}m`;
+	}
+	const ink = badgeLuminance(shown) > 0.179 ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 };
+	const fgOpen =
+		mode === "256color"
+			? `\u001b[38;5;${ink.r === 0 ? 16 : 231}m`
+			: `\u001b[38;2;${ink.r};${ink.g};${ink.b}m`;
+	return `${open}${fgOpen} ${label} \u001b[39m\u001b[49m`;
 }

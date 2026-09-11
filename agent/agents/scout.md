@@ -1,6 +1,7 @@
 ---
 name: scout
 description: Read-only codebase reconnaissance that returns a compact, traceable handoff for planning, specs, tickets, or implementation
+color: cyan
 tools: read, ls, fffind, ffgrep, bash
 model: commandcode/z-ai/glm-5.3-flash
 thinking: high

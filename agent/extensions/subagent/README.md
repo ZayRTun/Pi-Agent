@@ -11,6 +11,7 @@ Each agent file needs YAML frontmatter with `name` and `description`. Optional f
 - `thinking` — an optional level: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, or `max`. Unrecognized values warn and are treated as absent.
 - `allowSubagents` — defaults to `false`. Set it only for a deliberate orchestrator; ordinary leaf agents cannot recursively call `subagent`.
 - `timeoutMinutes` — an optional per-agent timeout in minutes (clamped to 1–480, default 30). A call-level `timeoutMinutes` overrides it.
+- `color` — an optional badge color for the agent name (Claude-Code style: `red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink`, `cyan`, or quoted hex like `"#8B5CF6"`). Invalid values render no badge. Today's roster: scout `cyan`, researcher `green`, reviewer `yellow`, worker `blue`.
 
 `model` and `thinking` are independent: each is used when declared and inherited from the invoking session otherwise, so declaring a model does not change the thinking level.
 
@@ -26,6 +27,8 @@ The prompt body is appended to Pi's normal system prompt. Keep it focused on the
 - `worker` — scoped implementation with test and commit/review handoff details for `/implement`.
 
 Use `parallel` for independent reconnaissance or review axes. Use `chain` only when the next task needs the previous agent's concise output; chain context is capped before it is inserted into the next task.
+
+Rows render pi-subagents style: a `●` tree heading (`parallel 2/2 · 24s`, `chain 2/2 steps · 41s`), one row per task/step (`✓ badge — summary (8s)` or live activity like `reading…` on a `⎿` line), and a dim `Total:` usage line. Single rows show `icon badge  task preview · stats · time` with a `⎿` activity/summary line; `Ctrl+O` expands to the full task, tool calls, markdown output, and usage. Agent names render as Claude-Code-style color badges from the optional `color:` frontmatter (red, blue, green, yellow, purple, orange, pink, cyan, or `#RRGGBB`); absent or invalid colors fall back to theme styling.
 
 Chain context is passed through the `{previous}` placeholder. The inserted text is labelled — `[Output from step N (agent), B bytes]: ...` — so the next agent can see where your instructions end and the prior output begins; a `, truncated to fit the chain context cap` note marks cut-off output. If a step after the first has no `{previous}`, the chain result carries a `[Chain warnings]` note naming the step and the dropped byte count (no warning when the prior output was empty, and no failure: some chains are just "do A, then do B"). Ask step 1 for machine-readable output (a full path, not a bare filename) and tell later steps to stop rather than guess when the context is ambiguous.
 

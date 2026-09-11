@@ -1,6 +1,7 @@
 ---
 name: reviewer
 description: Evidence-based read-only review of a fixed diff against repository standards and the originating spec
+color: yellow
 tools: read, ls, fffind, ffgrep, bash
 model: commandcode/z-ai/glm-5.3-flash
 thinking: high
