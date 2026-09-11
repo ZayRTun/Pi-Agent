@@ -1407,13 +1407,13 @@ export default function (pi: ExtensionAPI) {
 				if (isError && r.stopReason)
 					text += ` ${state === "aborted" ? theme.fg("warning", "[aborted]") : theme.fg("error", `[${r.stopReason}]`)}`;
 				if (state === "running") {
-					text += `\n${theme.fg("dim", `   \u23BF  ${describeActivity(r.messages)}`)}`;
+					text += `\n${theme.fg("dim", `   \u2514\u2500 ${describeActivity(r.messages)}`)}`;
 				} else if (isError) {
-					text += `\n  ${theme.fg("error", `\u23BF  ${polishedSummary(r)}`)}`;
+					text += `\n  ${theme.fg("error", `\u2514\u2500 ${polishedSummary(r)}`)}`;
 				} else {
 					const tools = countTools(r.messages);
 					if (tools) text += `\n  ${theme.fg("dim", tools)}`;
-					text += `\n  ${theme.fg("dim", `\u23BF  ${polishedSummary(r)}`)}`;
+					text += `\n  ${theme.fg("dim", `\u2514\u2500 ${polishedSummary(r)}`)}`;
 				}
 				return new Text(text, 0, 0);
 			};
