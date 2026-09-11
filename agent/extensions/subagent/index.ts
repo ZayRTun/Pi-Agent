@@ -28,7 +28,16 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
-import { type AgentConfig, type AgentScope, discoverAgents, THINKING_LEVELS } from "./agents.ts";
+import {
+	type AgentConfig,
+	type AgentScope,
+	DEFAULT_TIMEOUT_MINUTES,
+	discoverAgents,
+	MAX_TIMEOUT_MINUTES,
+	MIN_TIMEOUT_MINUTES,
+	resolveTimeoutMinutes,
+	THINKING_LEVELS,
+} from "./agents.ts";
 
 const MAX_PARALLEL_TASKS = 8;
 const MAX_CONCURRENCY = 4;
@@ -37,6 +46,8 @@ const PER_TASK_OUTPUT_CAP = 50 * 1024;
 const STDERR_CAPTURE_CAP = 32 * 1024;
 const CHAIN_CONTEXT_CAP = 50 * 1024;
 const ABORT_ESCALATION_MS = 5000;
+// Streaming updates are throttled to this cadence; see emitUpdate.
+const UPDATE_THROTTLE_MS = 200;
 
 // ── Spinner ────────────────────────────────────────────────────────────────
 // A single shared ticker drives every running row. It only runs while at
@@ -356,14 +367,37 @@ async function mapWithConcurrencyLimit<TIn, TOut>(
 	return results;
 }
 
-async function writePromptToTempFile(agentName: string, prompt: string): Promise<{ dir: string; filePath: string }> {
-	const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "pi-subagent-"));
+/**
+ * Create one temp dir per delegation. Every file the delegation needs (today:
+ * the system-prompt file) lives in it, so a single removeTempDir call cleans
+ * up everything — a new file can never be added without inheriting the same
+ * cleanup. Files are mode 0600: prompts can contain private repo context.
+ */
+async function createTaskTempDir(agentName: string): Promise<{
+	dir: string;
+	writeFile: (name: string, content: string) => Promise<string>;
+}> {
+	const dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "pi-subagent-"));
 	const safeName = agentName.replace(/[^\w.-]+/g, "_");
-	const filePath = path.join(tmpDir, `prompt-${safeName}.md`);
-	await withFileMutationQueue(filePath, async () => {
-		await fs.promises.writeFile(filePath, prompt, { encoding: "utf-8", mode: 0o600 });
-	});
-	return { dir: tmpDir, filePath };
+	const writeFile = async (name: string, content: string): Promise<string> => {
+		const filePath = path.join(dir, `${name}-${safeName}.md`);
+		await withFileMutationQueue(filePath, async () => {
+			await fs.promises.writeFile(filePath, content, { encoding: "utf-8", mode: 0o600 });
+		});
+		return filePath;
+	};
+	return { dir, writeFile };
+}
+
+// Delete a delegation's temp dir. Failures are ignored: the dir lives under
+// the OS temp root, so the system sweeper reclaims anything we miss.
+async function removeTempDir(dir: string | null): Promise<void> {
+	if (!dir) return;
+	try {
+		await fs.promises.rm(dir, { recursive: true, force: true, maxRetries: 2 });
+	} catch {
+		/* ignore */
+	}
 }
 
 function getPiInvocation(args: string[]): { command: string; args: string[] } {
@@ -397,6 +431,7 @@ async function runSingleAgent(
 	task: string,
 	cwd: string | undefined,
 	step: number | undefined,
+	timeoutMinutes: number | undefined,
 	signal: AbortSignal | undefined,
 	onUpdate: OnUpdateCallback | undefined,
 	makeDetails: (results: SingleResult[]) => SubagentDetails,
@@ -428,8 +463,16 @@ async function runSingleAgent(
 	if (agent.toolsSpecified) args.push("--tools", agent.tools?.join(",") ?? "");
 	if (!agent.allowSubagents) args.push("--exclude-tools", "subagent");
 
-	let tmpPromptDir: string | null = null;
-	let tmpPromptPath: string | null = null;
+	// Timeout precedence: call-level timeoutMinutes, then the Agent definition's
+	// timeoutMinutes, then the global default. resolveTimeoutMinutes clamps to
+	// [MIN_TIMEOUT_MINUTES, MAX_TIMEOUT_MINUTES], so garbage can never yield a
+	// zero or infinite timeout.
+	const effectiveTimeoutMinutes = resolveTimeoutMinutes(timeoutMinutes, agent.timeoutMinutes);
+	const timeoutMs = effectiveTimeoutMinutes * 60 * 1000;
+
+	// One temp dir per delegation; removeTempDir in the finally block deletes
+	// the whole dir at once.
+	let tmpDir: string | null = null;
 
 	const currentResult: SingleResult = {
 		agent: agentName,
@@ -443,7 +486,14 @@ async function runSingleAgent(
 		step,
 	};
 
-	const emitUpdate = () => {
+	// Streaming updates are throttled: a chatty subagent (dozens of file reads)
+	// would otherwise force a parent TUI re-render per tool call. The leading
+	// call goes through immediately so "starting..." feedback stays snappy;
+	// further calls within the window collapse into one trailing call, and
+	// flushUpdate() delivers the final state synchronously before return.
+	let lastEmitMs = 0;
+	let pendingEmit: ReturnType<typeof setTimeout> | null = null;
+	const sendUpdate = () => {
 		if (onUpdate) {
 			onUpdate({
 				content: [{ type: "text", text: getFinalOutput(currentResult.messages) || "(running...)" }],
@@ -451,17 +501,50 @@ async function runSingleAgent(
 			});
 		}
 	};
+	const emitUpdate = () => {
+		if (!onUpdate) return;
+		const waitMs = UPDATE_THROTTLE_MS - (Date.now() - lastEmitMs);
+		if (waitMs <= 0) {
+			if (pendingEmit) {
+				clearTimeout(pendingEmit);
+				pendingEmit = null;
+			}
+			lastEmitMs = Date.now();
+			sendUpdate();
+		} else if (!pendingEmit) {
+			pendingEmit = setTimeout(() => {
+				pendingEmit = null;
+				lastEmitMs = Date.now();
+				sendUpdate();
+			}, waitMs);
+			pendingEmit.unref?.();
+		}
+	};
+	const flushUpdate = () => {
+		if (pendingEmit) {
+			clearTimeout(pendingEmit);
+			pendingEmit = null;
+			lastEmitMs = Date.now();
+			sendUpdate();
+		}
+	};
 
 	try {
+		const tmp = await createTaskTempDir(agent.name);
+		tmpDir = tmp.dir;
+
 		if (agent.systemPrompt.trim()) {
-			const tmp = await writePromptToTempFile(agent.name, agent.systemPrompt);
-			tmpPromptDir = tmp.dir;
-			tmpPromptPath = tmp.filePath;
-			args.push("--append-system-prompt", tmpPromptPath);
+			const promptPath = await tmp.writeFile("prompt", agent.systemPrompt);
+			args.push("--append-system-prompt", promptPath);
 		}
 
-		args.push(`Task: ${task}`);
+		// Pass the task via stdin, not argv. argv has a hard OS size limit
+		// (ARG_MAX) and is world-visible in `ps`; stdin has neither problem.
+		// A "Task:" prefix is kept so the child sees the same shape as before.
+		const taskInput = `Task: ${task}`;
+
 		let wasAborted = false;
+		let timedOut = false;
 		currentResult.startedAt = Date.now();
 
 		const processResult = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolve) => {
@@ -470,11 +553,12 @@ async function runSingleAgent(
 				cwd: cwd ?? defaultCwd,
 				shell: false,
 				detached: process.platform !== "win32",
-				stdio: ["ignore", "pipe", "pipe"],
+				stdio: ["pipe", "pipe", "pipe"],
 			});
 			let buffer = "";
 			let settled = false;
 			let abortTimer: ReturnType<typeof setTimeout> | undefined;
+			let timeoutTimer: ReturnType<typeof setTimeout> | undefined;
 
 			const killProcessTree = (kind: NodeJS.Signals) => {
 				try {
@@ -488,8 +572,18 @@ async function runSingleAgent(
 				if (settled) return;
 				settled = true;
 				if (abortTimer) clearTimeout(abortTimer);
+				if (timeoutTimer) clearTimeout(timeoutTimer);
 				if (signal) signal.removeEventListener("abort", abortProc);
 				resolve({ code, signal: termSignal });
+			};
+			const onTimeout = () => {
+				if (settled) return;
+				timedOut = true;
+				wasAborted = true;
+				killProcessTree("SIGTERM");
+				abortTimer = setTimeout(() => {
+					if (!settled) killProcessTree("SIGKILL");
+				}, ABORT_ESCALATION_MS);
 			};
 			const abortProc = () => {
 				if (settled) return;
@@ -560,6 +654,18 @@ async function runSingleAgent(
 				finish(1, null);
 			});
 
+			// Feed the task on stdin (see above for why not argv), then close it
+			// so the child is never left waiting on input.
+			proc.stdin.on("error", () => {
+				/* child exited before reading stdin; close carries the outcome */
+			});
+			proc.stdin.end(taskInput, "utf-8");
+
+			// Per-call timeout: SIGTERM first, SIGKILL after the same escalation
+			// window as user cancellation.
+			timeoutTimer = setTimeout(onTimeout, timeoutMs);
+			timeoutTimer.unref?.();
+
 			if (signal) {
 				if (signal.aborted) abortProc();
 				else signal.addEventListener("abort", abortProc, { once: true });
@@ -568,7 +674,15 @@ async function runSingleAgent(
 
 		currentResult.exitCode = processResult.code ?? 1;
 		currentResult.endedAt = Date.now();
+		// Deliver any throttled trailing update before returning, so the parent
+		// never shows stale progress for a finished agent.
+		flushUpdate();
 		if (wasAborted) currentResult.aborted = true;
+		if (timedOut) {
+			currentResult.stopReason = "error";
+			currentResult.errorMessage ||=
+				`Subagent timed out after ${effectiveTimeoutMinutes} minute${effectiveTimeoutMinutes === 1 ? "" : "s"}. Pass a larger timeoutMinutes to allow more time.`;
+		}
 		if (processResult.code === null && !wasAborted) {
 			currentResult.stopReason = "error";
 			currentResult.errorMessage ||= `Subagent terminated by ${processResult.signal ?? "unknown signal"}.`;
@@ -577,25 +691,16 @@ async function runSingleAgent(
 			currentResult.stopReason = "error";
 			currentResult.errorMessage ||= "Subagent exited without a final text response.";
 		}
+		flushUpdate();
 		return currentResult;
 	} catch (error) {
 		currentResult.exitCode = 1;
 		currentResult.endedAt = Date.now();
 		currentResult.errorMessage = error instanceof Error ? error.message : String(error);
+		flushUpdate();
 		return currentResult;
 	} finally {
-		if (tmpPromptPath)
-			try {
-				fs.unlinkSync(tmpPromptPath);
-			} catch {
-				/* ignore */
-			}
-		if (tmpPromptDir)
-			try {
-				fs.rmdirSync(tmpPromptDir);
-			} catch {
-				/* ignore */
-			}
+		await removeTempDir(tmpDir);
 	}
 }
 
@@ -603,12 +708,26 @@ const TaskItem = Type.Object({
 	agent: Type.String({ description: "Name of the agent to invoke" }),
 	task: Type.String({ description: "Task to delegate to the agent" }),
 	cwd: Type.Optional(Type.String({ description: "Working directory for the agent process" })),
+	timeoutMinutes: Type.Optional(
+		Type.Number({
+				description: `Timeout for this delegation in minutes. Overrides the agent's timeoutMinutes, which overrides the default of ${DEFAULT_TIMEOUT_MINUTES}. Clamped to ${MIN_TIMEOUT_MINUTES}-${MAX_TIMEOUT_MINUTES}.`,
+				minimum: MIN_TIMEOUT_MINUTES,
+				maximum: MAX_TIMEOUT_MINUTES,
+			}),
+	),
 });
 
 const ChainItem = Type.Object({
 	agent: Type.String({ description: "Name of the agent to invoke" }),
 	task: Type.String({ description: "Task with optional {previous} placeholder for prior output" }),
 	cwd: Type.Optional(Type.String({ description: "Working directory for the agent process" })),
+	timeoutMinutes: Type.Optional(
+		Type.Number({
+				description: `Timeout for this step in minutes. Overrides the agent's timeoutMinutes, which overrides the default of ${DEFAULT_TIMEOUT_MINUTES}. Clamped to ${MIN_TIMEOUT_MINUTES}-${MAX_TIMEOUT_MINUTES}.`,
+				minimum: MIN_TIMEOUT_MINUTES,
+				maximum: MAX_TIMEOUT_MINUTES,
+			}),
+	),
 });
 
 const AgentScopeSchema = StringEnum(["user", "project", "both"] as const, {
@@ -626,6 +745,13 @@ const SubagentParams = Type.Object({
 		Type.Boolean({ description: "Require interactive approval for untrusted project-local agents; false rejects them. Default: true.", default: true }),
 	),
 	cwd: Type.Optional(Type.String({ description: "Working directory for the agent process (single mode)" })),
+	timeoutMinutes: Type.Optional(
+		Type.Number({
+			description: `Timeout for the delegation in minutes (single mode). Overrides the agent's timeoutMinutes, which overrides the default of ${DEFAULT_TIMEOUT_MINUTES}. Clamped to ${MIN_TIMEOUT_MINUTES}-${MAX_TIMEOUT_MINUTES}.`,
+			minimum: MIN_TIMEOUT_MINUTES,
+			maximum: MAX_TIMEOUT_MINUTES,
+		}),
+	),
 });
 
 export default function (pi: ExtensionAPI) {
@@ -771,6 +897,7 @@ export default function (pi: ExtensionAPI) {
 						taskWithContext,
 						step.cwd,
 						i + 1,
+						step.timeoutMinutes,
 						signal,
 						chainUpdate,
 						makeDetails("chain"),
@@ -847,6 +974,7 @@ export default function (pi: ExtensionAPI) {
 						t.task,
 						t.cwd,
 						undefined,
+						t.timeoutMinutes,
 						signal,
 						// Per-task update callback
 						(partial) => {
@@ -863,6 +991,7 @@ export default function (pi: ExtensionAPI) {
 				});
 
 				const successCount = results.filter((r) => !isFailedResult(r)).length;
+				const completeFailure = successCount === 0;
 				const summaries = results.map((r) => {
 					const output = truncateOutput(getResultOutput(r));
 					const rState = getRunState(r);
@@ -883,6 +1012,9 @@ export default function (pi: ExtensionAPI) {
 					],
 					details: makeDetails("parallel")(results),
 					usage: toNestedUsage(results),
+					// Total failure is a machine-readable error; anything else stays
+					// success so the parent can use the partial results.
+					isError: completeFailure,
 				};
 			}
 
@@ -895,6 +1027,7 @@ export default function (pi: ExtensionAPI) {
 					params.task,
 					params.cwd,
 					undefined,
+					params.timeoutMinutes,
 					signal,
 					onUpdate,
 					makeDetails("single"),

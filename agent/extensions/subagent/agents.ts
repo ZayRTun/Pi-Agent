@@ -20,6 +20,8 @@ export interface AgentConfig {
 	thinking?: ThinkingLevel;
 	/** The unrecognized `thinking` value, kept so execute() can warn about it. */
 	invalidThinking?: string;
+	/** Declared per-agent timeout in minutes; absent means the call-level or global default. */
+	timeoutMinutes?: number;
 	systemPrompt: string;
 	source: "user" | "project";
 	filePath: string;
@@ -45,9 +47,35 @@ type AgentFrontmatter = {
 	allowSubagents?: unknown;
 	model?: unknown;
 	thinking?: unknown;
+	timeoutMinutes?: unknown;
 };
 
 export const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
+
+/** Bounds (minutes) for subagent timeouts, enforced wherever a timeout is declared. */
+export const MIN_TIMEOUT_MINUTES = 1;
+export const MAX_TIMEOUT_MINUTES = 480;
+/** Timeout used when neither the call nor the Agent definition declares one. */
+export const DEFAULT_TIMEOUT_MINUTES = 30;
+
+/**
+ * Clamp a raw timeout value into bounds. Anything that is not a finite
+ * number yields undefined ("not declared"), so bad frontmatter can never
+ * produce a zero or infinite timeout.
+ */
+function clampTimeoutMinutes(value: unknown): number | undefined {
+	const n = typeof value === "string" ? Number(value.trim()) : value;
+	if (typeof n !== "number" || !Number.isFinite(n)) return undefined;
+	return Math.min(Math.max(n, MIN_TIMEOUT_MINUTES), MAX_TIMEOUT_MINUTES);
+}
+
+/**
+ * Resolve the effective timeout in minutes.
+ * Precedence: call-level param, then the Agent definition, then the default.
+ */
+export function resolveTimeoutMinutes(callLevel?: unknown, agentLevel?: unknown): number {
+	return clampTimeoutMinutes(callLevel) ?? clampTimeoutMinutes(agentLevel) ?? DEFAULT_TIMEOUT_MINUTES;
+}
 
 /**
  * Split a frontmatter `thinking` value into a usable level and, when the value
@@ -141,6 +169,7 @@ function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig
 			model: typeof frontmatter.model === "string" ? frontmatter.model : undefined,
 			thinking: thinking.level,
 			invalidThinking: thinking.invalid,
+			timeoutMinutes: clampTimeoutMinutes(frontmatter.timeoutMinutes),
 			systemPrompt: body,
 			source,
 			filePath,

@@ -10,8 +10,11 @@ Each agent file needs YAML frontmatter with `name` and `description`. Optional f
 - `model` — an optional `provider/model` override.
 - `thinking` — an optional level: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, or `max`. Unrecognized values warn and are treated as absent.
 - `allowSubagents` — defaults to `false`. Set it only for a deliberate orchestrator; ordinary leaf agents cannot recursively call `subagent`.
+- `timeoutMinutes` — an optional per-agent timeout in minutes (clamped to 1–480, default 30). A call-level `timeoutMinutes` overrides it.
 
 `model` and `thinking` are independent: each is used when declared and inherited from the invoking session otherwise, so declaring a model does not change the thinking level.
+
+Tasks are sent to the child over stdin (never argv: no OS size limit, nothing visible in `ps`). Each delegation gets one temp dir holding the prompt/task files; the dir is deleted when the delegation finishes, and anything missed is reclaimed by the OS temp sweeper. Every delegation has a timeout (call-level `timeoutMinutes`, else the agent's `timeoutMinutes`, else 30 minutes); on timeout the child is sent SIGTERM, then SIGKILL after 5s, and the result reports `timed out after N minutes`. A parallel result with 0/N successes returns `isError: true`; partial successes still return success so the parent can use them.
 
 The prompt body is appended to Pi's normal system prompt. Keep it focused on the agent's role, process, and handoff format. Tasks are intentionally not copied from the parent session, so callers must pass the spec, ticket, fixed point, artifact path, or other necessary context explicitly.
 
