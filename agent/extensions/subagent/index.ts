@@ -222,6 +222,20 @@ interface SubagentDetails {
 	results: SingleResult[];
 }
 
+/**
+ * Wrap a prior step's output before it is pasted into the next step's task.
+ *
+ * Raw splicing hides where instructions end and old output begins, so the
+ * next agent can mistake one for the other. The label names the source step,
+ * states the byte size, and flags truncation — the child can then judge how
+ * much to trust the context instead of guessing.
+ */
+function formatPreviousOutput(output: string, agent: string, step: number, truncated: boolean): string {
+	const byteLength = Buffer.byteLength(output, "utf8");
+	const note = truncated ? ", truncated to fit the chain context cap" : "";
+	return `[Output from step ${step} (${agent}), ${byteLength} bytes${note}]:\n${output}`;
+}
+
 function getFinalOutput(messages: Message[]): string {
 	for (let i = messages.length - 1; i >= 0; i--) {
 		const msg = messages[i];
@@ -868,11 +882,26 @@ export default function (pi: ExtensionAPI) {
 
 			if (params.chain && params.chain.length > 0) {
 				const results: SingleResult[] = [];
+				// Raw text of the prior step, plus the labelled form actually pasted
+				// into the next task. Both are kept: {previous} substitutes the
+				// labelled form, while the missing-placeholder warning below quotes
+				// the raw form's length from the unlabelled text.
 				let previousOutput = "";
+				let previousLabelled = "";
+				const previousWarnings: string[] = [];
 
 				for (let i = 0; i < params.chain.length; i++) {
 					const step = params.chain[i];
-					const taskWithContext = step.task.replace(/\{previous\}/g, previousOutput);
+					const stepUsesPrevious = step.task.includes("{previous}");
+					// A step that forgets {previous} silently drops the prior output.
+					// Warn (don't fail): some chains are just "do A, then do B" with
+					// no data passing, where dropping is intended.
+					if (i > 0 && !stepUsesPrevious && previousOutput.length > 0) {
+						previousWarnings.push(
+							`Step ${i + 1} (${step.agent}) has no {previous} placeholder; step ${i} (${params.chain[i - 1].agent}) output (${Buffer.byteLength(previousOutput, "utf8")} bytes) was not passed.`,
+						);
+					}
+					const taskWithContext = step.task.replace(/\{previous\}/g, previousLabelled);
 
 					// Create update callback that includes all previous results
 					const chainUpdate: OnUpdateCallback | undefined = onUpdate
@@ -907,17 +936,27 @@ export default function (pi: ExtensionAPI) {
 					const isError = isFailedResult(result);
 					if (isError) {
 						const errorMsg = truncateOutput(getResultOutput(result));
+						const warningBlock =
+							previousWarnings.length > 0 ? `\n\n[Chain warnings]\n- ${previousWarnings.join("\n- ")}` : "";
 						return {
-							content: [{ type: "text", text: `Chain stopped at step ${i + 1} (${step.agent}): ${errorMsg}` }],
+							content: [{ type: "text", text: `Chain stopped at step ${i + 1} (${step.agent}): ${errorMsg}${warningBlock}` }],
 							details: makeDetails("chain")(results),
 							usage: toNestedUsage(results),
 							isError: true,
 						};
 					}
 					previousOutput = truncateOutput(getFinalOutput(result.messages), CHAIN_CONTEXT_CAP);
+					const wasTruncated =
+						Buffer.byteLength(getFinalOutput(result.messages), "utf8") >
+						Buffer.byteLength(previousOutput, "utf8");
+					previousLabelled = formatPreviousOutput(previousOutput, result.agent, i + 1, wasTruncated);
 				}
+				const finalText =
+					truncateOutput(getFinalOutput(results[results.length - 1].messages)) || "(no output)";
+				const warningBlock =
+					previousWarnings.length > 0 ? `\n\n[Chain warnings]\n- ${previousWarnings.join("\n- ")}` : "";
 				return {
-					content: [{ type: "text", text: truncateOutput(getFinalOutput(results[results.length - 1].messages)) || "(no output)" }],
+					content: [{ type: "text", text: `${finalText}${warningBlock}` }],
 					details: makeDetails("chain")(results),
 					usage: toNestedUsage(results),
 				};

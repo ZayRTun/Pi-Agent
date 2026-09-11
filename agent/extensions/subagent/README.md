@@ -27,6 +27,8 @@ The prompt body is appended to Pi's normal system prompt. Keep it focused on the
 
 Use `parallel` for independent reconnaissance or review axes. Use `chain` only when the next task needs the previous agent's concise output; chain context is capped before it is inserted into the next task.
 
+Chain context is passed through the `{previous}` placeholder. The inserted text is labelled — `[Output from step N (agent), B bytes]: ...` — so the next agent can see where your instructions end and the prior output begins; a `, truncated to fit the chain context cap` note marks cut-off output. If a step after the first has no `{previous}`, the chain result carries a `[Chain warnings]` note naming the step and the dropped byte count (no warning when the prior output was empty, and no failure: some chains are just "do A, then do B"). Ask step 1 for machine-readable output (a full path, not a bare filename) and tell later steps to stop rather than guess when the context is ambiguous.
+
 ## Safety behavior
 
 Project-local agents require an already trusted project or interactive approval. Headless runs fail closed. On POSIX, child processes are terminated as a process group on cancellation (Windows uses the direct child process), and nested subagent calls are disabled by default.
