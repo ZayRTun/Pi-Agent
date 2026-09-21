@@ -1,5 +1,6 @@
 # --- Secrets: never commit ---
 agent/auth.json
+agent/pi-typesafe/
 
 # --- Runtime data / caches / logs (regenerable) ---
 agent/npm/

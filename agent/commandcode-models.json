@@ -157,7 +157,7 @@
       "id": "deepseek/deepseek-v4.1-flash",
       "name": "DeepSeek V4.1 Flash (CC)",
       "api": "openai-completions",
-      "reasoning": false,
+      "reasoning": true,
       "contextWindow": 1000000,
       "maxTokens": 65536
     },
@@ -208,6 +208,14 @@
       "reasoning": true,
       "contextWindow": 1048576,
       "maxTokens": 131072
+    },
+    {
+      "id": "z-ai/glm-5.3-flashx",
+      "name": "GLM-5.3 FlashX (CC)",
+      "api": "openai-completions",
+      "reasoning": false,
+      "contextWindow": 1000000,
+      "maxTokens": 65536
     },
     {
       "id": "zai-org/GLM-5.3",
@@ -290,6 +298,14 @@
       "maxTokens": 65536
     },
     {
+      "id": "Qwen/Qwen3.8-Omni-Flash",
+      "name": "Qwen 3.8 Omni Flash (CC)",
+      "api": "openai-completions",
+      "reasoning": true,
+      "contextWindow": 1000000,
+      "maxTokens": 131072
+    },
+    {
       "id": "Qwen/Qwen3.8-Max-0902",
       "name": "Qwen 3.8 Max 0902 (CC)",
       "api": "openai-completions",
@@ -362,10 +378,10 @@
       "maxTokens": 65536
     },
     {
-      "id": "meituan/LongCat-2.0:free",
+      "id": "meituan/LongCat-2.0",
       "name": "LongCat 2.0 (CC)",
       "api": "openai-completions",
-      "reasoning": true,
+      "reasoning": false,
       "contextWindow": 1048576,
       "maxTokens": 65536
     },
@@ -493,9 +509,9 @@
       "id": "inclusionai/ling-3.0-flash-sante:free",
       "name": "Ling 3.0 Flash Sante (CC)",
       "api": "openai-completions",
-      "reasoning": false,
+      "reasoning": true,
       "contextWindow": 262144,
-      "maxTokens": 65536
+      "maxTokens": 32768
     },
     {
       "id": "meta/muse-spark-1.1",

@@ -1,6 +1,6 @@
 {
   "hideThinkingBlock": true,
-  "lastChangelogVersion": "0.85.1",
+  "lastChangelogVersion": "0.86.1",
   "theme": "sumi-night",
   "defaultProvider": "commandcode",
   "defaultModel": "z-ai/glm-5.3-flash",
@@ -12,7 +12,8 @@
     "npm:pi-mcp-adapter",
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:@victor-software-house/pi-curated-themes",
-    "npm:pi-commandcode-provider"
+    "npm:pi-commandcode-provider",
+    "npm:pi-typesafe"
   ],
   "quietStartup": true,
   "fullscreenExitOutput": "resume-hint",
