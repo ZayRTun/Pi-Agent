@@ -1,16 +1,11 @@
 {
   "mcpServers": {
-    "codegraph": {
-      "command": "/Users/zayar/.local/bin/codegraph",
+    "chrome-devtools": {
+      "command": "npx",
       "args": [
-        "serve",
-        "--mcp"
-      ],
-      "lifecycle": "lazy",
-      "directTools": [
-        "codegraph_explore"
-      ],
-      "toolPrefix": "none"
+        "-y",
+        "chrome-devtools-mcp@1.6.0"
+      ]
     }
   }
 }

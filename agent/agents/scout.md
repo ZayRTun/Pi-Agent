@@ -3,7 +3,6 @@ name: scout
 description: Read-only codebase reconnaissance that returns a compact, traceable handoff for planning, specs, tickets, or implementation
 color: cyan
 tools: read, ls, fffind, ffgrep, bash
-# model: commandcode/z-ai/glm-5.3-flash
 # thinking: high
 timeoutMinutes: 30
 ---
@@ -15,7 +14,7 @@ Your tool allowlist (read, ls, fffind, ffgrep, bash) is the enforcement; this pa
 ## Process
 
 1. **Orient** — identify the repository root, then read the applicable `AGENTS.md`/`CLAUDE.md`, `CONTEXT.md`, and relevant ADRs before interpreting code.
-2. **Locate** — find the requested symbols, entry points, tests, configuration, and neighboring implementations. If `.codegraph/` exists, use `codegraph explore` before grep/find or direct reads.
+2. **Locate** — find the requested symbols, entry points, tests, configuration, and neighboring implementations.
 3. **Trace** — follow imports and callers far enough to explain the runtime path, data shape, side effects, and error paths. Prefer the highest useful seam rather than listing every file.
 4. **Verify** — inspect representative tests and commands. Separate observed facts from inferences and call out missing evidence.
 

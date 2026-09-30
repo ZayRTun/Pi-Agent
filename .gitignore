@@ -3,6 +3,8 @@ agent/auth.json
 agent/pi-typesafe/
 
 # --- Runtime data / caches / logs (regenerable) ---
+node_modules/
+agent/telemetry-archived-*/
 agent/npm/
 agent/missions/
 agent/sessions/

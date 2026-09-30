@@ -1,19 +1,21 @@
 {
   "hideThinkingBlock": true,
-  "lastChangelogVersion": "0.99.1",
+  "lastChangelogVersion": "0.87.1",
+  "theme": "sumi-night",
   "defaultProvider": "opencode-go",
-  "defaultModel": "deepseek-v4.1-flash",
+  "defaultModel": "glm-5.3-flash",
   "defaultThinkingLevel": "high",
   "tuiMode": "fullscreen",
   "packages": [
     "npm:pi-web-access",
-    "npm:@ff-labs/pi-fff"
+    "npm:@ff-labs/pi-fff",
+    "npm:pi-mcp-adapter",
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:@victor-software-house/pi-curated-themes",
+    "npm:pi-commandcode-provider",
+    "npm:pi-typesafe"
   ],
-  "extensions": [
-    "-extensions/opencode-attention/index.ts",
-    "-extensions/custom-header.ts"
-  ],
-  "quietStartup": false,
+  "quietStartup": true,
   "fullscreenExitOutput": "resume-hint",
   "attention": {
     "enabled": true,
@@ -27,11 +29,5 @@
   },
   "terminal": {
     "showTerminalProgress": false
-  },
-  "editorPaddingX": 1,
-  "outputPad": 1,
-  "defaultTools": [
-    "+codemode"
-  ],
-  "deviceId": "2a91410f-7ea5-4c19-89ea-d120bae92268"
+  }
 }

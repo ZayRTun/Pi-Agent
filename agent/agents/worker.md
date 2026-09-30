@@ -3,7 +3,6 @@ name: worker
 description: Isolated implementation agent for a spec or ticket that preserves scope, verifies behavior, and returns a complete handoff
 color: blue
 tools: read, ls, fffind, ffgrep, bash, edit, write, fetch_content
-# model: commandcode/z-ai/glm-5.3-flash
 # thinking: high
 timeoutMinutes: 30
 ---

@@ -1,7 +1,3 @@
 {
-  "mcpServers": {
-    "chrome-devtools": {
-      "disabled": false
-    }
-  }
+  "mcpServers": {}
 }
